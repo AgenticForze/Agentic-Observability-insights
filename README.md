@@ -2,7 +2,7 @@
 
 Comparisons, insights and tooling for choosing and running LLM observability platforms.
 
-**Browse it:** https://agenticforze.github.io/agentic-observability-insights/
+**Browse it:** https://agenticforze.github.io/Agentic-Observability-insights/
 
 The core idea: **own the signal, rent the screen.** Own your instrumentation (OpenTelemetry) and your telemetry pipeline. Buy or build everything above them based on scale, sovereignty and what actually differentiates you.
 

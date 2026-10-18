@@ -2,7 +2,7 @@
 
 - `observability-own-the-signal.pdf`: the file to upload to LinkedIn as a document post (10 slides, 1080x1350).
 - `source.html`: slide source. `render.py` rebuilds the PDF and slide PNGs.
-- `qr.svg`: QR code for https://agenticforze.github.io/agentic-observability-insights/
+- `qr.svg`: QR code for https://agenticforze.github.io/Agentic-Observability-insights/
 
 To rebuild, install the fonts next to the render script and run it:
 

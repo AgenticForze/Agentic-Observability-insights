@@ -4,7 +4,7 @@ audience: CTOs, CIOs and platform leaders
 format: LinkedIn carousel, 1080x1080, 10 slides
 status: draft-for-review
 thesis: Own the signal, rent the screen. Own instrumentation and the pipeline; buy or build the backend based on scale.
-detail_link: https://agenticforze.github.io/agentic-observability-insights/
+detail_link: https://agenticforze.github.io/Agentic-Observability-insights/
 pdf: carousels/observability-build-buy-hybrid/observability-own-the-signal.pdf
 
 slides:
@@ -98,7 +98,7 @@ slides:
     headline: The full analysis is open.
     body:
       - "9 platforms, 7 criteria, every source. Set your own priorities and re-rank. Comment on any page."
-      - "agenticforze.github.io/agentic-observability-insights"
+      - "agenticforze.github.io/Agentic-Observability-insights"
       - What would you never outsource? Tell me in the comments.
     visual: QR code to the site beside a short description, the URL in large mono type, the question at the bottom.
 
@@ -126,6 +126,6 @@ caption: |
 first_comment: |
   Browse the full analysis: 9 LLM observability platforms scored on 7 criteria, with sources, insights, the multi-framework agent code and a Claude skill. Set your own weights and it re-ranks them. Every page has a link to comment or suggest an edit.
 
-  👉 https://agenticforze.github.io/agentic-observability-insights/
+  👉 https://agenticforze.github.io/Agentic-Observability-insights/
 
   Pricing is as of mid-2026, so check vendor pages before you buy.
