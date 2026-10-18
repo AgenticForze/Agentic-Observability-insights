@@ -30,7 +30,8 @@ SKILL_SYNC = {
     ROOT / "insights" / "01-build-buy-hybrid.md": SKILL_REFS / "build-buy-hybrid.md",
 }
 TEXT_EXT = {".md", ".yaml", ".yml", ".py", ".txt", ".toml", ".json", ".cfg"}
-SKIP_DIRS = {".git", "site", "__pycache__", ".pytest_cache", ".venv", "venv", "node_modules"}
+# carousels/ stays in the repo (agents write drafts there) but is not published on the site.
+SKIP_DIRS = {".git", "site", "carousels", "__pycache__", ".pytest_cache", ".venv", "venv", "node_modules"}
 MAX_BYTES = 200_000
 
 
@@ -79,16 +80,6 @@ def insights() -> list[dict]:
     return out
 
 
-def carousels() -> list[dict]:
-    out = []
-    for path in sorted(data.CAROUSELS_DIR.rglob("*.yaml")):
-        doc = yaml.safe_load(path.read_text(encoding="utf-8"))
-        doc["path"] = path.relative_to(ROOT).as_posix()
-        doc["draft"] = "drafts" in path.parts
-        doc["problems"] = scoring.validate_carousel(doc)
-        out.append(doc)
-    return out
-
 
 def git_info() -> dict:
     def run(*args):
@@ -120,7 +111,6 @@ def main() -> int:
         "platforms": data.platforms_doc(),
         "criteria": data.criteria_doc(),
         "insights": insights(),
-        "carousels": carousels(),
         "reports": reports,
         "review": review,
         "freshness": scoring.freshness(),

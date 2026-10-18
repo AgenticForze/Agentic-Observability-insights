@@ -34,5 +34,7 @@ def test_rank_script_rejects_bad_input():
 def test_site_build(tmp_path):
     subprocess.run([sys.executable, str(ROOT / "scripts" / "build_site.py")], check=True, capture_output=True)
     content = json.loads((ROOT / "site" / "content.json").read_text())
-    assert {"platforms", "criteria", "insights", "carousels", "reports", "review", "files"} <= set(content)
+    assert {"platforms", "criteria", "insights", "reports", "review", "files"} <= set(content)
     assert any(f["path"] == "README.md" for f in content["files"])
+    assert "carousels" not in content
+    assert not any(f["path"].startswith("carousels/") for f in content["files"])

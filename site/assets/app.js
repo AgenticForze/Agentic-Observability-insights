@@ -4,7 +4,6 @@
 "use strict";
 
 const app = document.getElementById("app");
-const lightbox = document.getElementById("lightbox");
 let C = null;                         // content.json
 const GH = () => `https://github.com/${C.repo.owner}/${C.repo.name}`;
 const BRANCH = () => (C.repo.branch && C.repo.branch !== "HEAD" ? C.repo.branch : "main");
@@ -44,14 +43,13 @@ const langOf = p => ({py: "python", yaml: "yaml", yml: "yaml", md: "markdown", j
 
 /* ---------- routing ---------- */
 const routes = {
-  "": home, compare, insights, carousels, architecture, skill, review, files,
+  "": home, compare, insights, architecture, skill, review, files,
 };
 function route() {
   const raw = location.hash.replace(/^#\/?/, "");
   const [page, ...rest] = raw.split("/");
   const arg = decodeURIComponent(rest.join("/"));
   const fn = routes[page] || notFound;
-  closeLightbox();
   app.innerHTML = "";
   fn(arg);
   document.querySelectorAll("nav#nav a").forEach(a => {
@@ -69,7 +67,7 @@ function notFound() {
 /* ---------- home ---------- */
 function home() {
   const n = {p: C.platforms.platforms.length, c: C.criteria.criteria.length,
-             i: C.insights.length, k: C.carousels.length, f: C.files.length};
+             i: C.insights.length, f: C.files.length};
   app.append(h("section", {class: "hero"}, `
     <div class="stack">
       <div class="eyebrow">LLM observability · strategy, comparison and tooling</div>
@@ -77,7 +75,7 @@ function home() {
       <p class="thesis">Own your <em>instrumentation</em> and your <em>pipeline</em>. Buy or build everything above them based on scale, sovereignty and what actually differentiates you.</p>
       <div class="row-wrap" style="margin-top:6px">
         <a class="btn primary" href="#/compare">Compare platforms</a>
-        <a class="btn" href="#/carousels">View the carousel</a>
+        <a class="btn" href="#/insights">Read the insights</a>
         <a class="btn" href="${GH()}">Open on GitHub</a>
       </div>
     </div>
@@ -91,12 +89,10 @@ function home() {
     <div class="stat"><b>${n.p}</b><span>platforms compared</span></div>
     <div class="stat"><b>${n.c}</b><span>evaluation criteria</span></div>
     <div class="stat"><b>${n.i}</b><span>insight documents</span></div>
-    <div class="stat"><b>${n.k}</b><span>carousels</span></div>
     <div class="stat"><b>3</b><span>agent frameworks</span></div>`));
   const cards = [
     ["#/compare", "Compare", "Platform comparison", "Weight seven criteria, set must-haves and rank nine platforms. Full feature matrix by group."],
     ["#/insights", "Insights", "Build, buy or hybrid", "The decision framework, local tracing, the LexAgent walkthrough and the evaluation checklist."],
-    ["#/carousels", "Carousels", "Executive carousel", "The 10-slide CTO/CIO carousel with caption and first comment. Expand to present."],
     ["#/architecture", "Agents", "Multi-framework agents", "Researcher, analyst, writer and reviewer, built in LangGraph, CrewAI and the OpenAI Agents SDK."],
     ["#/skill", "Skill", "Claude skill", "observability-platform-analyst: the same workflow as a portable Claude skill with a ranking script."],
     ["#/review", "Review", "Review queue", "Validation results, data freshness and drafts waiting for human review."],
@@ -253,108 +249,6 @@ function insights(slug) {
   body.append(md(cur.body));
 }
 
-/* ---------- carousels ---------- */
-function slideHTML(s, i, total, doc) {
-  const dark = i === 0 || i === total - 1;
-  const body = (Array.isArray(s.body) ? s.body : [s.body || ""]).map(b => `<li>${esc(b)}</li>`).join("");
-  return `<div class="slide${dark ? " dark" : ""}" role="group" aria-roledescription="slide" aria-label="Slide ${i + 1} of ${total}">
-    <div class="s-top"><span>${esc(s.role || "")}</span><span>${String(i + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}</span></div>
-    <h3>${esc(s.headline)}</h3><ul>${body}</ul>
-    <div class="s-foot"><span>${esc(doc.audience ? "For " + doc.audience : "")}</span><span>${i < total - 1 ? "Swipe →" : ""}</span></div></div>`;
-}
-function buildCarousel(doc, {expanded = false} = {}) {
-  const slides = doc.slides || [];
-  let i = 0;
-  const root = h("div", {class: "car", "aria-roledescription": "carousel", "aria-label": doc.title});
-  root.innerHTML = `<div class="car-stage">
-      <button class="car-nav" type="button" data-d="-1" aria-label="Previous slide">‹</button>
-      <div class="car-viewport"><div class="car-track">${slides.map((s, k) => slideHTML(s, k, slides.length, doc)).join("")}</div></div>
-      <button class="car-nav" type="button" data-d="1" aria-label="Next slide">›</button></div>
-    <div class="car-bar"><div class="dots">${slides.map((_, k) => `<button class="dot" type="button" aria-label="Go to slide ${k + 1}" data-k="${k}"></button>`).join("")}</div>
-      <div class="row-wrap"><button class="btn" type="button" data-act="notes" aria-pressed="false">Designer notes</button>
-      <button class="btn${expanded ? "" : " primary"}" type="button" data-act="expand">${expanded ? "Close" : "Expand"}</button></div></div>
-    <div class="visual-note" hidden></div>`;
-  const track = root.querySelector(".car-track"), note = root.querySelector(".visual-note");
-  const prev = root.querySelector('[data-d="-1"]'), next = root.querySelector('[data-d="1"]');
-  function go(n) {
-    i = Math.max(0, Math.min(slides.length - 1, n));
-    track.style.transform = `translateX(-${i * 100}%)`;
-    prev.disabled = i === 0; next.disabled = i === slides.length - 1;
-    root.querySelectorAll(".dot").forEach((d, k) => d.setAttribute("aria-current", String(k === i)));
-    note.innerHTML = `<b>Slide ${i + 1} visual:</b> ${esc(slides[i]?.visual || "No note.")}`;
-    root.dataset.index = i;
-  }
-  prev.onclick = () => go(i - 1); next.onclick = () => go(i + 1);
-  root.querySelectorAll(".dot").forEach(d => (d.onclick = () => go(+d.dataset.k)));
-  const notesBtn = root.querySelector('[data-act="notes"]');
-  notesBtn.onclick = () => { note.hidden = !note.hidden; notesBtn.setAttribute("aria-pressed", String(!note.hidden)); };
-  root.querySelector('[data-act="expand"]').onclick = () => expanded ? closeLightbox() : openLightbox(doc, i);
-  // swipe
-  let x0 = null;
-  const vp = root.querySelector(".car-viewport");
-  vp.addEventListener("pointerdown", e => (x0 = e.clientX));
-  vp.addEventListener("pointerup", e => { if (x0 === null) return; const dx = e.clientX - x0; if (Math.abs(dx) > 40) go(i + (dx < 0 ? 1 : -1)); x0 = null; });
-  root.go = go;
-  root.keys = e => { if (e.key === "ArrowRight") go(i + 1); if (e.key === "ArrowLeft") go(i - 1); };
-  root.tabIndex = 0;
-  root.addEventListener("keydown", root.keys);
-  go(0);
-  return root;
-}
-let lbReturn = null, lbKeys = null;
-function openLightbox(doc, index) {
-  lbReturn = document.activeElement;
-  lightbox.innerHTML = `<button class="lb-close" type="button">Close (Esc)</button>`;
-  const car = buildCarousel(doc, {expanded: true});
-  lightbox.append(car);
-  car.go(index || 0);
-  lightbox.hidden = false;
-  document.body.classList.add("locked");
-  lightbox.querySelector(".lb-close").onclick = closeLightbox;
-  lbKeys = e => { if (e.key === "Escape") closeLightbox(); else car.keys(e); };
-  document.addEventListener("keydown", lbKeys);
-  lightbox.querySelector(".lb-close").focus();
-}
-function closeLightbox() {
-  if (lightbox.hidden) return;
-  lightbox.hidden = true; lightbox.innerHTML = "";
-  document.body.classList.remove("locked");
-  if (lbKeys) document.removeEventListener("keydown", lbKeys);
-  if (lbReturn && lbReturn.focus) lbReturn.focus();
-}
-function carousels(id) {
-  const list = C.carousels;
-  const doc = list.find(c => c.id === id) || list[0];
-  app.append(h("div", {class: "page-head"}, `<div class="eyebrow">Carousels · ${list.length} in repo</div><h1>${esc(doc ? doc.title : "Carousels")}</h1>
-    ${doc ? `<p class="lede">${esc(doc.thesis || "")}</p>` : ""}`));
-  if (!doc) { app.append(h("p", {class: "muted"}, "No carousels yet. Add a YAML file to carousels/.")); return; }
-  if (list.length > 1) {
-    const pick = h("div", {class: "row-wrap", style: "margin-bottom:18px"});
-    list.forEach(c => pick.append(h("a", {class: "chip", href: `#/carousels/${encodeURIComponent(c.id)}`, "aria-pressed": String(c.id === doc.id)}, esc(c.title) + (c.draft ? " (draft)" : ""))));
-    app.append(pick);
-  }
-  const lay = h("div", {class: "car-layout"});
-  const left = h("div", {class: "stack"}); left.append(buildCarousel(doc));
-  const right = h("div", {class: "stack"});
-  right.append(h("div", {class: "row-wrap"}, `<span class="pill">${esc(doc.format || "")}</span>
-    <span class="pill ${doc.problems.length ? "bad" : "ok"}">${doc.problems.length ? doc.problems.length + " validation issue(s)" : "passes validation"}</span>
-    <span class="pill warn">${esc(doc.status || "draft")}</span>`));
-  if (doc.problems.length) right.append(h("div", {class: "note bad"}, `<ul style="margin:0;padding-left:18px">${doc.problems.map(p => `<li>${esc(p)}</li>`).join("")}</ul>`));
-  for (const [label, key] of [["LinkedIn caption", "caption"], ["First comment", "first_comment"]]) {
-    if (!doc[key]) continue;
-    const sec = h("section", {class: "stack", style: "gap:8px"});
-    const head = h("div", {class: "row-wrap", style: "justify-content:space-between"}, `<h3>${label}</h3>`);
-    const btn = h("button", {class: "btn", type: "button", "data-label": "Copy"}, "Copy");
-    btn.onclick = () => copy(doc[key], btn);
-    head.append(btn);
-    sec.append(head, h("div", {class: "copybox"}, esc(doc[key])));
-    right.append(sec);
-  }
-  right.append(h("div", {class: "row-wrap"}, `<a class="btn" href="#/files/${doc.path}">View source YAML</a><a class="btn" href="${GH()}/edit/${BRANCH()}/${doc.path}">Suggest an edit</a>`));
-  lay.append(left, right);
-  app.append(lay);
-}
-
 /* ---------- architecture ---------- */
 function architecture() {
   app.append(h("div", {class: "page-head"}, `<div class="eyebrow">Agents</div><h1>One workflow, three frameworks</h1>
@@ -381,7 +275,7 @@ function architecture() {
     <text x="40" y="395" style="fill:var(--ink);font-size:13px">data/platforms.yaml · data/criteria.yaml</text>
     <rect x="460" y="350" width="420" height="60" rx="10" style="fill:var(--surface);stroke:var(--line)"/>
     <text x="480" y="374" style="fill:var(--muted);font-size:12px;font-family:var(--mono)">OUTPUT (drafts for human review)</text>
-    <text x="480" y="395" style="fill:var(--ink);font-size:13px">insights/drafts/ · carousels/drafts/ → this site</text>
+    <text x="480" y="395" style="fill:var(--ink);font-size:13px">insights/drafts/ · carousels/drafts/ → human review</text>
   </svg>`;
   app.append(h("div", {class: "panel pad tablebox arch"}, svg));
   const fw = h("section", {class: "stack", style: "margin-top:28px"}, `<h2>How the three designs differ</h2>`);
@@ -432,13 +326,12 @@ python ~/.claude/skills/observability-platform-analyst/scripts/rank.py --preset 
 /* ---------- review ---------- */
 function review(preset) {
   const r = C.review, fr = C.freshness;
-  const drafts = [...C.insights.filter(i => i.draft).map(i => ({t: i.title, k: "Insight", href: `#/insights/${i.slug}`, path: i.path})),
-                  ...C.carousels.filter(c => c.draft || /review/.test(c.status || "")).map(c => ({t: c.title, k: "Carousel", href: `#/carousels/${c.id}`, path: c.path}))];
+  const drafts = C.insights.filter(i => i.draft).map(i => ({t: i.title, k: "Insight", href: `#/insights/${i.slug}`, path: i.path}));
   app.append(h("div", {class: "page-head"}, `<div class="eyebrow">Review · built ${esc(C.built_at)}${C.repo.commit ? " · commit " + esc(C.repo.commit) : ""}</div>
     <h1>Review queue</h1><p class="lede">What the reviewer role checked on this build, and what needs a human decision.</p>`));
   const top = h("div", {class: "grid-cards", style: "margin-bottom:24px"});
   top.append(h("div", {class: "panel card"}, `<span class="eyebrow">Automated review</span><h3 style="font-size:22px">${r.approved ? "Approved" : "Needs revision"}</h3>
-    <p class="muted">${r.approved ? "All carousels pass validation and no price mismatches were found." : r.problems.length + " problem(s) found."}</p>`));
+    <p class="muted">${r.approved ? "All content passes validation and no price mismatches were found." : r.problems.length + " problem(s) found."}</p>`));
   top.append(h("div", {class: "panel card"}, `<span class="eyebrow">Data freshness</span><h3 style="font-size:22px">${fr.stale ? "Stale" : "Current"}</h3>
     <p class="muted">Dataset as of ${esc(fr.as_of)}, ${fr.age_months} month(s) old. Re-verify after ${fr.max_age_months} months.</p>`));
   top.append(h("div", {class: "panel card"}, `<span class="eyebrow">Waiting for review</span><h3 style="font-size:22px">${drafts.length} item(s)</h3>

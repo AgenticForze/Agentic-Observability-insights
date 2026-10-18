@@ -12,10 +12,10 @@ The core idea: **own the signal, rent the screen.** Own your instrumentation (Op
 |---|---|
 | [`data/`](data) | The single source of truth: nine platforms with facts, 0-3 scores, must-have flags and sources (`platforms.yaml`), and the seven criteria, must-haves and weight presets (`criteria.yaml`). |
 | [`insights/`](insights) | Markdown insights: the build/buy/hybrid framework, local tracing, the LexAgent walkthrough, the evaluation checklist. Agent drafts land in `insights/drafts/`. |
-| [`carousels/`](carousels) | LinkedIn carousels as YAML (slides, visual notes, caption, first comment). Agent drafts land in `carousels/drafts/`. |
+| [`carousels/`](carousels) | LinkedIn carousels: the source YAML (slides, visual notes, caption, first comment) and the postable PDF. Agent drafts land in `carousels/drafts/`. Not shown on the site. |
 | [`agent_system/`](agent_system) | The multi-framework agent system: shared tools and prompts in `core/`, and the same workflow in LangGraph, CrewAI and the OpenAI Agents SDK in `frameworks/`. |
 | [`skills/`](skills) | The `observability-platform-analyst` Claude skill, with bundled data and a ranking script. |
-| [`site/`](site) | The static website that browses this repository, including the expandable carousel and three standalone explorers. |
+| [`site/`](site) | The static website that browses this repository, plus three standalone explorers. Carousels are not published on the site. |
 | [`scripts/`](scripts) | `build_site.py` builds `site/content.json` and syncs the skill's data. |
 | [`tests/`](tests) | Tests for data integrity, scoring, tools, validation and the offline pipeline. |
 

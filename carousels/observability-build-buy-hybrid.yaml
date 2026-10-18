@@ -4,7 +4,8 @@ audience: CTOs, CIOs and platform leaders
 format: LinkedIn carousel, 1080x1080, 10 slides
 status: draft-for-review
 thesis: Own the signal, rent the screen. Own instrumentation and the pipeline; buy or build the backend based on scale.
-detail_link: https://agenticforze.github.io/agentic-observability-insights/#/compare
+detail_link: https://agenticforze.github.io/agentic-observability-insights/
+pdf: carousels/observability-build-buy-hybrid/observability-own-the-signal.pdf
 
 slides:
   - n: 1
@@ -20,9 +21,9 @@ slides:
     body:
       - One proprietary agent per tool
       - Every log ingested, at full price
-      - Duplicate data across three platforms
-      - AI agents now produce 10x the spans
-      - More data, less insight, higher bill.
+      - The same data stored in three platforms
+      - AI agents emit dozens of spans per request
+      - More data. Less insight. Higher bill.
     visual: Tangle of lines from many services into grey tool boxes, a growing "$" at the end.
 
   - n: 3
@@ -61,8 +62,8 @@ slides:
       - "Buy, eval-first: Braintrust, LangSmith, W&B Weave"
       - "Cost gateway: Helicone"
       - "Already on APM: Datadog"
-      - All except Weave and Braintrust confirm OpenTelemetry support.
-    visual: "2x2 grid: self-host/open to managed/closed, tracing-led to evaluation-led. Footer: full comparison in comments."
+      - "Full scored comparison, 7 criteria, sources: link on the last slide."
+    visual: "2x2 grid of platform groups, each with a one-line reason. Footer points to the last slide."
 
   - n: 7
     role: Economics
@@ -94,11 +95,12 @@ slides:
 
   - n: 10
     role: CTA
-    headline: Where do you draw the line?
+    headline: The full analysis is open.
     body:
-      - What part of your observability stack would you never outsource, and what did you regret building?
-      - "Full platform comparison: first comment."
-    visual: Single centred question, speech-bubble icon, name and title at the bottom.
+      - "9 platforms, 7 criteria, every source. Set your own priorities and re-rank. Comment on any page."
+      - "agenticforze.github.io/agentic-observability-insights"
+      - What would you never outsource? Tell me in the comments.
+    visual: QR code to the site beside a short description, the URL in large mono type, the question at the bottom.
 
 caption: |
   Most observability strategies were never designed. They built up over time.
@@ -113,7 +115,7 @@ caption: |
   → Build only when telemetry is your product, or when data sovereignty leaves no choice.
   → Hybrid for most enterprises: hot data to a vendor, cold data to cheap storage, all routed through your own pipeline.
 
-  For AI workloads, I compared 9 platforms across 7 criteria. You can set your own priorities and it ranks them for you. Link in the first comment.
+  For AI workloads, I compared 9 platforms across 7 criteria and published everything: the scores, the sources, the agent code. Set your own priorities and it re-ranks them. Link on the last slide and in the first comment. Every page has a comment link, so challenge any score.
 
   The question isn't build or buy. It's where you keep control.
 
@@ -122,8 +124,8 @@ caption: |
   #Observability #CTO #OpenTelemetry
 
 first_comment: |
-  The interactive comparison: 9 LLM observability platforms scored on data control, instrumentation fit, agent depth, evaluation loop, cost, operations and ease of setup. Set your own weights and must-haves, and it re-ranks them.
+  Browse the full analysis: 9 LLM observability platforms scored on 7 criteria, with sources, insights, the multi-framework agent code and a Claude skill. Set your own weights and it re-ranks them. Every page has a link to comment or suggest an edit.
 
-  👉 https://agenticforze.github.io/agentic-observability-insights/#/compare
+  👉 https://agenticforze.github.io/agentic-observability-insights/
 
   Pricing is as of mid-2026, so check vendor pages before you buy.
