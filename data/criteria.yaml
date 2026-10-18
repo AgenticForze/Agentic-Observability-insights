@@ -1,0 +1,65 @@
+# Evaluation criteria used to score every platform.
+# Scores in platforms.yaml use a 0-3 scale for each criterion:
+#   0 = none, 1 = limited, 2 = good, 3 = strong
+scale:
+  min: 0
+  max: 3
+  labels: {0: none, 1: limited, 2: good, 3: strong}
+
+criteria:
+  - key: data
+    name: Data control
+    question: Can we keep trace data where we need it?
+    looks_at: Self-hosting, license (OSI vs source-available), data residency
+  - key: instr
+    name: Instrumentation fit
+    question: Does it fit how we instrument?
+    looks_at: OpenTelemetry support, framework coverage, cross-process span nesting
+  - key: agent
+    name: Agent depth
+    question: Can we see each reasoning step?
+    looks_at: Span-level tool calls and inputs rather than request-level logs
+  - key: eval
+    name: Evaluation loop
+    question: Does it close the evaluation loop?
+    looks_at: Datasets, LLM-as-judge, online evals, human annotation, CI gating
+  - key: cost
+    name: Cost
+    question: What will it cost at our volume?
+    looks_at: Free tier, self-host cost, billing unit, retention
+  - key: ops
+    name: Operations
+    question: Will it alert us?
+    looks_at: Cost tracking, dashboards, alerts, gateway features
+  - key: ease
+    name: Ease of setup
+    question: How fast is the first trace?
+    looks_at: Time from signup to first nested trace, SDK languages
+
+must_haves:
+  - key: selfhost
+    name: Free self-hosting
+  - key: osi
+    name: OSI open-source license
+  - key: otel
+    name: OpenTelemetry support confirmed
+  - key: ci
+    name: CI regression gating confirmed
+
+# Weight presets (0-5 per criterion) used by the site and the scoring tool.
+presets:
+  course:
+    name: Course or classroom
+    weights: {data: 5, instr: 4, agent: 3, eval: 4, cost: 5, ops: 1, ease: 4}
+  startup:
+    name: Startup
+    weights: {data: 2, instr: 3, agent: 4, eval: 4, cost: 4, ops: 3, ease: 5}
+  regulated:
+    name: Regulated enterprise
+    weights: {data: 5, instr: 4, agent: 3, eval: 5, cost: 1, ops: 4, ease: 2}
+  langchain:
+    name: LangChain team
+    weights: {data: 1, instr: 5, agent: 5, eval: 4, cost: 2, ops: 3, ease: 5}
+  equal:
+    name: Equal weights
+    weights: {data: 3, instr: 3, agent: 3, eval: 3, cost: 3, ops: 3, ease: 3}

@@ -1,0 +1,284 @@
+# LLM observability platforms: facts, scores and sources.
+#
+# facts    : what the sources say. "Not confirmed" means the sources reviewed
+#            did not confirm the feature; it may still exist.
+# scores   : 0-3 per criterion (see criteria.yaml). Editorial assessment, not benchmarks.
+# must     : true / false / null (null = not confirmed)
+# as_of    : when pricing and features were last checked. Re-verify before buying.
+
+as_of: 2026-10
+sources:
+  - id: marktechpost
+    title: "MarkTechPost: Top LLM observability and evaluation platforms in 2026"
+    url: https://www.marktechpost.com/2026/08/09/top-llm-observability-and-evaluation-platforms-in-2026-langfuse-langsmith-braintrust-arize-and-more-compared/
+  - id: morph
+    title: "Morph: LLM observability tools (2026), every free tier limit listed"
+    url: https://www.morphllm.com/llm-observability-tools
+  - id: langfuse-clickhouse
+    title: "Langfuse: Joining ClickHouse"
+    url: https://langfuse.com/blog/joining-clickhouse
+  - id: orrick
+    title: "Orrick: Langfuse acquired by ClickHouse (January 2026)"
+    url: https://www.orrick.com/en/news/2026/01/open-source-llm-observability-langfuse-acquired-by-clickhouse-inc
+  - id: opik-pypi
+    title: "Opik on PyPI"
+    url: https://pypi.org/project/opik/2.2.44/
+  - id: arize-faq
+    title: "Arize: difference between Phoenix and Arize"
+    url: https://www.arize.com/docs/phoenix/resources/frequently-asked-questions/what-is-the-difference-between-phoenix-and-arize.md
+  - id: mlflow
+    title: "MLflow: Top LLM observability tools in 2026"
+    url: https://mlflow.org/articles/top-llm-observability-tools-in-2026-a-pro-guide/
+
+platforms:
+  - id: langsmith
+    name: LangSmith
+    owner: LangChain
+    summary: Default backend for LangChain and LangGraph; what the LexAgent notebook uses.
+    category: buy-eval-first
+    scores: {data: 1, instr: 3, agent: 3, eval: 3, cost: 1, ops: 3, ease: 3}
+    must: {selfhost: false, osi: false, otel: true, ci: true}
+    facts:
+      license: Closed source
+      selfhost: Enterprise plan only (your VPC)
+      free_tier: 5k traces/mo, 1 seat
+      paid_from: $39/seat/mo
+      otel: "Yes"
+      agent_depth: "Strong: trace clustering, failure grouping"
+      frameworks: Best for LangChain/LangGraph; Python, TS, Go, Java SDKs
+      datasets: Strong
+      llm_judge: Yes, calibrated to human preference
+      online_evals: "Yes"
+      human_annotation: Annotation queues
+      ci_gating: Side-by-side comparisons gate regressions
+      cost_tracking: Unified view across LLM, tools, retrieval, APIs
+      prompt_mgmt: Prompt Hub
+      extras: Agent deployment runtime
+      best_for: Teams already on LangChain/LangGraph who want zero setup
+    strengths: [Deepest LangChain/LangGraph integration, Online evals and annotation queues]
+    watch_out: [Closed source, Self-hosting needs an Enterprise license]
+    sources: [marktechpost, morph]
+
+  - id: langfuse
+    name: Langfuse
+    owner: ClickHouse (acquired Jan 2026)
+    summary: The most widely self-hosted open-source option.
+    category: self-host
+    scores: {data: 3, instr: 3, agent: 3, eval: 3, cost: 3, ops: 2, ease: 2}
+    must: {selfhost: true, osi: true, otel: true, ci: true}
+    facts:
+      license: MIT core; enterprise folders separate
+      selfhost: "Free: Docker Compose, Helm, Terraform"
+      free_tier: 50k units/mo, 2 users, 30-day access
+      paid_from: $29/mo
+      otel: "Yes"
+      agent_depth: "Strong: nested traces, session replay"
+      frameworks: "Framework-agnostic: OTel, LangChain, OpenAI SDK, LiteLLM"
+      datasets: "Strong: versioned datasets"
+      llm_judge: Yes, with templates
+      online_evals: Production monitoring
+      human_annotation: Annotation queues
+      ci_gating: GitHub Actions regression tests
+      cost_tracking: By model, user, session
+      prompt_mgmt: Yes, with playground
+      extras: Strong data-residency control
+      best_for: Open source, self-hosting, data residency
+    strengths: [Free self-hosting with an MIT core, Prompt management and evals included]
+    watch_out: [You run the infrastructure when self-hosting, "Ownership changed in 2026; licensing said to be unchanged"]
+    sources: [marktechpost, morph, langfuse-clickhouse, orrick]
+
+  - id: phoenix
+    name: Arize Phoenix
+    owner: Arize (AX is commercial)
+    summary: Free, OpenTelemetry-native tracing that runs on your laptop.
+    category: self-host
+    scores: {data: 2, instr: 3, agent: 2, eval: 3, cost: 3, ops: 2, ease: 2}
+    must: {selfhost: true, osi: false, otel: true, ci: null}
+    facts:
+      license: Elastic License 2.0 (source-available, not OSI)
+      selfhost: "Free: pip, Docker, Helm"
+      free_tier: No caps when self-hosted
+      paid_from: Arize AX is commercial
+      otel: Native (OpenInference conventions)
+      agent_depth: Good
+      frameworks: 40+ integrations; strong LlamaIndex, OpenAI Agents SDK
+      datasets: "Strong: datasets and experiments"
+      llm_judge: Yes, many templates
+      online_evals: Drift detection (AX)
+      human_annotation: Not confirmed
+      ci_gating: Not confirmed
+      cost_tracking: "Yes"
+      prompt_mgmt: Prompt playground
+      extras: Embedding clustering; classic ML too
+      best_for: Free local tracing
+    strengths: [Runs locally for free, "OpenTelemetry-native, so instrumentation is portable"]
+    watch_out: [Elastic License is not OSI open source, Online monitoring lives in paid AX]
+    sources: [marktechpost, morph, arize-faq]
+
+  - id: braintrust
+    name: Braintrust
+    owner: Braintrust
+    summary: Evaluation-first platform with CI quality gates.
+    category: buy-eval-first
+    scores: {data: 1, instr: 2, agent: 3, eval: 3, cost: 1, ops: 2, ease: 2}
+    must: {selfhost: false, osi: false, otel: null, ci: true}
+    facts:
+      license: Closed source
+      selfhost: Enterprise only (on-prem or hybrid)
+      free_tier: $10 credits, 1 GB, 14-day retention
+      paid_from: $249/mo
+      otel: Not confirmed
+      agent_depth: "Strong: custom trace database"
+      frameworks: Framework-agnostic SDKs
+      datasets: "Strongest: versioned datasets, experiments"
+      llm_judge: Yes, plus an AI scorer generator
+      online_evals: "Yes"
+      human_annotation: Human scoring
+      ci_gating: Blocks regressions before deploy
+      cost_tracking: "Yes"
+      prompt_mgmt: Playground tested on production data
+      extras: Agent that drafts prompts and scorers
+      best_for: Teams that want evals to block bad releases
+    strengths: [Strongest experiment and CI gating workflow, Unlimited users on free tier]
+    watch_out: [Highest paid entry price, Closed source]
+    sources: [marktechpost, morph]
+
+  - id: weave
+    name: W&B Weave
+    owner: Weights & Biases
+    summary: LLM tracing beside W&B experiment tracking.
+    category: buy-eval-first
+    scores: {data: 1, instr: 2, agent: 2, eval: 2, cost: 2, ops: 2, ease: 2}
+    must: {selfhost: false, osi: false, otel: null, ci: null}
+    facts:
+      license: Apache 2.0 SDK; commercial platform
+      selfhost: Enterprise
+      free_tier: 1 GB/mo ingestion
+      paid_from: $60/mo (1.5 GB)
+      otel: Not confirmed
+      agent_depth: "Good: parent-child multi-agent traces"
+      frameworks: Python-centric
+      datasets: Good
+      llm_judge: "Yes"
+      online_evals: Not confirmed
+      human_annotation: Not confirmed
+      ci_gating: Not confirmed
+      cost_tracking: Per agent
+      prompt_mgmt: Not confirmed
+      extras: Lineage to W&B experiments
+      best_for: Teams already using W&B
+    strengths: [Ties LLM traces to model training history]
+    watch_out: [Ingestion priced per MB above the plan, "LLM layer is newer than W&B's core"]
+    sources: [marktechpost, morph]
+
+  - id: opik
+    name: Opik
+    owner: Comet
+    summary: Open-source tracing and evals with built-in guardrails.
+    category: self-host
+    scores: {data: 3, instr: 3, agent: 2, eval: 2, cost: 3, ops: 2, ease: 2}
+    must: {selfhost: true, osi: true, otel: true, ci: true}
+    facts:
+      license: Apache 2.0
+      selfhost: "Free: Docker Compose, Helm"
+      free_tier: Cloud tier available
+      paid_from: See vendor
+      otel: First-party
+      agent_depth: "Good: @track decorator for nested calls"
+      frameworks: Dozens incl. LangChain, LlamaIndex, CrewAI
+      datasets: Good
+      llm_judge: Hallucination, moderation, RAG metrics
+      online_evals: Not confirmed
+      human_annotation: Feedback scores on traces
+      ci_gating: PyTest integration
+      cost_tracking: "Yes"
+      prompt_mgmt: Yes, with playground
+      extras: Built-in guardrails
+      best_for: Open source with guardrails included
+    strengths: [Apache 2.0 including the backend, Guardrails in the same tool]
+    watch_out: [Smaller ecosystem than Langfuse]
+    sources: [opik-pypi]
+
+  - id: mlflow
+    name: MLflow Tracing
+    owner: Linux Foundation / Databricks
+    summary: Open-source tracing inside the MLflow platform.
+    category: self-host
+    scores: {data: 3, instr: 2, agent: 2, eval: 2, cost: 3, ops: 2, ease: 1}
+    must: {selfhost: true, osi: true, otel: true, ci: true}
+    facts:
+      license: Apache 2.0
+      selfhost: Free
+      free_tier: Fully open source
+      paid_from: Managed via Databricks
+      otel: Exports OTel GenAI conventions
+      agent_depth: "Good: native agent tracing"
+      frameworks: Broad; integrates RAGAS, DeepEval, TruLens
+      datasets: "Good: MLflow experiments"
+      llm_judge: Yes, multi-turn
+      online_evals: Not confirmed
+      human_annotation: Judge alignment with human feedback
+      ci_gating: Via MLflow experiments
+      cost_tracking: Via AI gateway
+      prompt_mgmt: Yes, with automatic optimization
+      extras: "Gateway: routing, rate limits, fallbacks"
+      best_for: Teams already on MLflow or Databricks
+    strengths: [No enterprise paywall, Prompt optimization from eval results]
+    watch_out: [Slower start for teams new to MLflow]
+    sources: [marktechpost, mlflow]
+
+  - id: helicone
+    name: Helicone
+    owner: Helicone
+    summary: "Proxy and gateway: cost, caching and routing with one line."
+    category: gateway
+    scores: {data: 3, instr: 1, agent: 1, eval: 1, cost: 3, ops: 3, ease: 3}
+    must: {selfhost: true, osi: true, otel: true, ci: false}
+    facts:
+      license: Apache 2.0
+      selfhost: "Free: five-service Compose stack"
+      free_tier: 10k requests/mo, 7-day retention
+      paid_from: $79/mo
+      otel: OpenLLMetry logging
+      agent_depth: "Limited: request-level, not span-level"
+      frameworks: 100+ models via base-URL swap
+      datasets: Light
+      llm_judge: Light
+      online_evals: Not a focus
+      human_annotation: Not confirmed
+      ci_gating: "No"
+      cost_tracking: Strongest for multi-provider cost
+      prompt_mgmt: Prompt experiments
+      extras: Response caching, routing, alerts
+      best_for: Fast multi-provider cost visibility; often paired with another tool
+    strengths: [One-line setup, Caching and routing reduce spend]
+    watch_out: [Not built for deep agent traces or eval loops]
+    sources: [marktechpost, morph]
+
+  - id: datadog
+    name: Datadog LLM Obs
+    owner: Datadog
+    summary: LLM traces next to your APM, logs and security data.
+    category: apm
+    scores: {data: 0, instr: 3, agent: 2, eval: 1, cost: 0, ops: 3, ease: 2}
+    must: {selfhost: false, osi: false, otel: true, ci: null}
+    facts:
+      license: Proprietary
+      selfhost: No (SaaS)
+      free_tier: Not published
+      paid_from: Contact sales
+      otel: Native GenAI conventions v1.37+
+      agent_depth: "Moderate: agent monitoring added recently"
+      frameworks: 1,000+ infrastructure integrations
+      datasets: Moderate, added recently
+      llm_judge: Not confirmed
+      online_evals: Not confirmed
+      human_annotation: Not confirmed
+      ci_gating: Not confirmed
+      cost_tracking: Per request
+      prompt_mgmt: Not confirmed
+      extras: Prompt-injection security signals; incident workflows
+      best_for: Organisations already running Datadog
+    strengths: [LLM issues in the same place as infra alerts]
+    watch_out: [Evals less mature; teams often add an eval tool, No public pricing]
+    sources: [marktechpost, morph]

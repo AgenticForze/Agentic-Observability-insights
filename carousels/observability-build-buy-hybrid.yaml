@@ -1,0 +1,129 @@
+id: observability-build-buy-hybrid
+title: "Observability platforms: build, buy or hybrid"
+audience: CTOs, CIOs and platform leaders
+format: LinkedIn carousel, 1080x1080, 10 slides
+status: draft-for-review
+thesis: Own the signal, rent the screen. Own instrumentation and the pipeline; buy or build the backend based on scale.
+detail_link: https://agenticforze.github.io/agentic-observability-insights/#/compare
+
+slides:
+  - n: 1
+    role: Hook
+    headline: Your observability bill is growing faster than your revenue.
+    body:
+      - You never chose this. You inherited it, one agent and one dashboard at a time.
+    visual: Plain dark background, two-line headline, faded rising line chart behind it.
+
+  - n: 2
+    role: Problem
+    headline: The old model breaks at scale.
+    body:
+      - One proprietary agent per tool
+      - Every log ingested, at full price
+      - Duplicate data across three platforms
+      - AI agents now produce 10x the spans
+      - More data, less insight, higher bill.
+    visual: Tangle of lines from many services into grey tool boxes, a growing "$" at the end.
+
+  - n: 3
+    role: Strategic shift
+    headline: Own the signal. Rent the screen.
+    body:
+      - Telemetry is a strategic data asset.
+      - Treat the vendor as a replaceable view on top of it, not the place your data lives.
+    visual: "Split screen. Before: vendor at the centre. After: your pipeline at the centre, vendors around it."
+
+  - n: 4
+    role: Blueprint
+    headline: Four layers. Two you must own.
+    body:
+      - "1. Instrumentation: OpenTelemetry. Own it."
+      - "2. Pipeline: sample, redact, route. Own it."
+      - "3. Storage: hot vs cold. Choose."
+      - "4. Analysis/UI: choose."
+      - Own layers 1 and 2, and every vendor becomes swappable.
+    visual: Four stacked layers like a building, with "Own" or "Choose" beside each.
+
+  - n: 5
+    role: Decision rule
+    headline: "Build, buy or hybrid: the decision rule."
+    body:
+      - "Buy: small platform team, speed matters, standard stack."
+      - "Build: telemetry is your product, or sovereignty is non-negotiable."
+      - "Hybrid: you own the pipeline; vendors get hot data, cheap storage gets the rest."
+    visual: Three-column table, one icon per column. The slide people will save.
+
+  - n: 6
+    role: Platform landscape
+    headline: "For AI workloads: pick by what you'll own."
+    body:
+      - "Self-host or hybrid: Langfuse, Phoenix, Opik, MLflow"
+      - "Buy, eval-first: Braintrust, LangSmith, W&B Weave"
+      - "Cost gateway: Helicone"
+      - "Already on APM: Datadog"
+      - All except Weave and Braintrust confirm OpenTelemetry support.
+    visual: "2x2 grid: self-host/open to managed/closed, tracing-led to evaluation-led. Footer: full comparison in comments."
+
+  - n: 7
+    role: Economics
+    headline: Price the engineers, not the licence.
+    body:
+      - In-house means a permanent headcount line.
+      - Vendor costs scale with volume.
+      - Cut ingest in the pipeline before renegotiating.
+      - Build only when vendor spend reliably exceeds the team that would replace it.
+    visual: "Crossover chart: vendor cost rising with volume, in-house cost flat with headcount, crossing labelled 'Inflection point'."
+
+  - n: 8
+    role: Pitfall
+    headline: The two traps that burn budgets.
+    body:
+      - "Building a UI: you'll spend a year recreating what vendors ship weekly."
+      - "Proprietary agents: switching costs a rewrite of every service."
+      - Build the plumbing, not the screens.
+    visual: Red warning band, two crossed-out icons (dashboard, padlock).
+
+  - n: 9
+    role: Takeaway
+    headline: The framework in three lines.
+    body:
+      - 1. Instrument once, with open standards.
+      - 2. Control volume and routing in your own pipeline.
+      - 3. Buy screens, build only what differentiates, and revisit yearly.
+    visual: Three numbered statements, large type, lots of white space.
+
+  - n: 10
+    role: CTA
+    headline: Where do you draw the line?
+    body:
+      - What part of your observability stack would you never outsource, and what did you regret building?
+      - "Full platform comparison: first comment."
+    visual: Single centred question, speech-bubble icon, name and title at the bottom.
+
+caption: |
+  Most observability strategies were never designed. They built up over time.
+
+  A new team adds an agent. Another buys a dashboard. Then AI agents arrive and multiply your trace volume overnight. Two years later, observability is one of the largest lines in the cloud budget, and switching vendors means touching every service.
+
+  The fix is not a better vendor. It's deciding which layers of your stack you own.
+
+  My rule:
+  → Own instrumentation (OpenTelemetry) and the pipeline that samples, redacts and routes data.
+  → Buy the analysis and the UI. Vendors improve them faster than any internal team.
+  → Build only when telemetry is your product, or when data sovereignty leaves no choice.
+  → Hybrid for most enterprises: hot data to a vendor, cold data to cheap storage, all routed through your own pipeline.
+
+  For AI workloads, I compared 9 platforms across 7 criteria. You can set your own priorities and it ranks them for you. Link in the first comment.
+
+  The question isn't build or buy. It's where you keep control.
+
+  What would you never outsource in your stack?
+
+  #Observability #CTO #OpenTelemetry
+
+first_comment: |
+  The interactive comparison: 9 LLM observability platforms scored on data control, instrumentation fit, agent depth, evaluation loop, cost, operations and ease of setup. Set your own weights and must-haves, and it re-ranks them.
+
+  👉 https://agenticforze.github.io/agentic-observability-insights/#/compare
+
+  Pricing is as of mid-2026, so check vendor pages before you buy.

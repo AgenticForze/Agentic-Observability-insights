@@ -1,0 +1,3 @@
+# Core: data, tools, offline pipeline, site build, tests
+pyyaml>=6.0
+pytest>=8.0

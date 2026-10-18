@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agentic Observability Insights</title>
+<meta name="description" content="LLM observability platform comparisons, build/buy/hybrid insights, carousels, a multi-framework agent system and a Claude skill.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<header class="bar">
+  <div class="bar-inner">
+    <a class="brand" href="#/">Agentic Observability <span>Insights</span></a>
+    <button class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav id="nav" aria-label="Sections">
+      <a href="#/compare">Compare</a>
+      <a href="#/insights">Insights</a>
+      <a href="#/carousels">Carousels</a>
+      <a href="#/architecture">Agents</a>
+      <a href="#/skill">Skill</a>
+      <a href="#/review">Review</a>
+      <a href="#/files">Files</a>
+    </nav>
+  </div>
+</header>
+<main id="app" class="wrap" tabindex="-1">
+  <p class="loading">Loading repository content…</p>
+</main>
+<footer class="foot wrap" id="foot"></footer>
+
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Expanded carousel"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

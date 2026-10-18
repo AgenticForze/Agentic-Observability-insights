@@ -1,0 +1,572 @@
+<title>LexAgent Trace Walkthrough</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: case-file workbench. Sticky sequence diagram on the left, step dossier on the right; tabs swap the right-hand material. */
+:root{
+  --bg:#eef1f4; --surface:#ffffff; --sunk:#e4e8ed; --ink:#16202b; --muted:#566273; --line:#d3d9e0;
+  --nb:#3b50bf; --nb-soft:#e6e9fa; --srv:#0d7466; --srv-soft:#dcf1ec; --ext:#6a7280; --ext-soft:#eceef1;
+  --trace:#b86d00; --trace-soft:#fbefd9; --ok:#1d7a3a; --ok-soft:#e1f2e5; --bad:#b3261e; --bad-soft:#fbe3e1;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161d; --surface:#18202a; --sunk:#0d1218; --ink:#e6ebf1; --muted:#9aa6b5; --line:#2b3542;
+  --nb:#8fa0ff; --nb-soft:#222a52; --srv:#4fcfb8; --srv-soft:#123a34; --ext:#a3abb8; --ext-soft:#252c36;
+  --trace:#f2b04a; --trace-soft:#3b2a0d; --ok:#6bd28a; --ok-soft:#14321f; --bad:#ff8a80; --bad-soft:#3d1714; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161d; --surface:#18202a; --sunk:#0d1218; --ink:#e6ebf1; --muted:#9aa6b5; --line:#2b3542;
+  --nb:#8fa0ff; --nb-soft:#222a52; --srv:#4fcfb8; --srv-soft:#123a34; --ext:#a3abb8; --ext-soft:#252c36;
+  --trace:#f2b04a; --trace-soft:#3b2a0d; --ok:#6bd28a; --ok-soft:#14321f; --bad:#ff8a80; --bad-soft:#3d1714; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;margin:0}
+.wrap{max-width:1240px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(28px,4vw,42px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:24px;font-weight:700}
+h3{font-size:17px;font-weight:500}
+code,.mono{font-family:var(--mono);font-size:.86em}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+header.top{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-end;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--line)}
+header.top .lede{max-width:62ch;color:var(--muted);margin-top:8px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:14px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+nav.tabs{display:flex;gap:4px;margin:20px 0;flex-wrap:wrap}
+nav.tabs button{font:500 15px var(--body);color:var(--muted);background:transparent;border:1px solid transparent;border-radius:999px;padding:7px 16px;cursor:pointer}
+nav.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);border-color:var(--line)}
+nav.tabs button:hover{color:var(--ink)}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--trace);outline-offset:2px}
+.grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;min-width:0}
+.diagram{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);padding:14px}
+@media (max-width:900px){.diagram{position:static}}
+.svgbox{overflow-x:auto}
+#seq{display:block;min-width:600px;width:100%;height:auto}
+#seq text{font-family:var(--body)}
+.ll-box{stroke-width:1}
+.ll-line{stroke:var(--line);stroke-dasharray:4 4}
+.msg line,.msg path{stroke:var(--muted);stroke-width:1.2;fill:none;opacity:.45;transition:opacity .25s,stroke .25s}
+.msg text{fill:var(--muted);font-size:12px;opacity:.6;transition:opacity .25s}
+.msg.ret line{stroke-dasharray:5 4}
+.msg.on line,.msg.on path{stroke:var(--trace);stroke-width:2.2;opacity:1}
+.msg.on text{fill:var(--ink);opacity:1;font-weight:600}
+.msg.done line{opacity:.8}.msg.done text{opacity:.85}
+.msg rect.self{fill:var(--srv-soft);stroke:var(--srv);stroke-width:1;opacity:.6}
+.msg.on rect.self{opacity:1;stroke:var(--trace);stroke-width:2}
+.loopbox{fill:none;stroke:var(--line);stroke-dasharray:6 4}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px}
+.btn{font:600 14px var(--body);background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.count{font-family:var(--mono);font-size:13px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.bar{height:4px;background:var(--sunk);border-radius:2px;overflow:hidden;margin-top:10px}
+.bar i{display:block;height:100%;background:var(--trace);width:0;transition:width .3s}
+.dossier{padding:22px 24px;display:flex;flex-direction:column;gap:18px}
+.step-head{display:flex;flex-direction:column;gap:6px}
+.where{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-family:var(--mono);font-size:12px;border-radius:999px;padding:2px 10px;border:1px solid var(--line);color:var(--muted);background:var(--sunk)}
+.pill.nb{color:var(--nb);background:var(--nb-soft);border-color:transparent}
+.pill.srv{color:var(--srv);background:var(--srv-soft);border-color:transparent}
+.pill.ext{color:var(--ext);background:var(--ext-soft);border-color:transparent}
+.pill.tr{color:var(--trace);background:var(--trace-soft);border-color:transparent}
+.concepts{display:flex;flex-direction:column;gap:12px}
+.concept{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px}
+.concept .k{font-family:var(--mono);font-size:12px;color:var(--trace);padding-top:3px}
+.concept b{font-weight:600}
+pre{margin:0;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:14px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.55;color:var(--ink);white-space:pre}
+.trace-card{border-left:3px solid var(--trace);border-radius:0;background:var(--trace-soft);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.trace-card .lbl,.pitfall .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--trace)}
+.pitfall{border-left:3px solid var(--bad);background:var(--bad-soft);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.pitfall .lbl{color:var(--bad)}
+.kv{display:flex;flex-wrap:wrap;gap:6px}
+.kv code{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:1px 7px}
+.steplist{list-style:none;margin:14px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.steplist button{width:100%;text-align:left;font:14px var(--body);background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;gap:8px;align-items:baseline}
+.steplist button span{font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums}
+.steplist button[aria-current="step"]{color:var(--ink);border-color:var(--trace);background:var(--trace-soft)}
+/* span tree */
+.tree-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:900px){.tree-grid{grid-template-columns:minmax(0,1fr)}}
+.tree{padding:18px;font-family:var(--mono);font-size:14px;overflow-x:auto}
+.tree ul{list-style:none;margin:0;padding-left:20px;border-left:1px dashed var(--line)}
+.tree>ul{border-left:0;padding-left:0}
+.tree li{margin:3px 0}
+.tree button{font:inherit;background:transparent;border:1px solid transparent;border-radius:6px;padding:2px 8px;cursor:pointer;color:var(--ink);display:inline-flex;gap:8px;align-items:center;white-space:nowrap}
+.tree button:hover{border-color:var(--line)}
+.tree button[aria-pressed="true"]{background:var(--trace-soft);border-color:var(--trace)}
+.tree .rt{font-size:11px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.span-detail{padding:22px 24px;display:flex;flex-direction:column;gap:14px}
+/* runs */
+.runs{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.run{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.seqchips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}
+.seqchips .arrow{color:var(--muted)}
+table.scores{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+table.scores td{padding:4px 0;border-bottom:1px solid var(--line)}
+table.scores td:last-child{text-align:right;font-family:var(--mono);font-size:13px}
+.fail{color:var(--bad)}
+/* quiz */
+.quiz{display:flex;flex-direction:column;gap:16px;max-width:820px}
+.q{padding:20px 22px;display:flex;flex-direction:column;gap:12px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opts label{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer}
+.opts label:hover{border-color:var(--muted)}
+.opts label.right{border-color:var(--ok);background:var(--ok-soft)}
+.opts label.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opts input{margin-top:5px}
+.qerr{color:var(--bad);font-size:13px}
+.qfeed{font-size:15px}
+.score{font-family:var(--display);font-size:20px}
+.muted{color:var(--muted)}
+.section-intro{max-width:70ch;color:var(--muted);margin-bottom:18px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Week 15 · Monitoring and observability</div>
+      <h1>LexAgent trace walkthrough</h1>
+      <p class="lede">Follow one New York rental-law question through the ReAct loop, across the MCP process boundary, and into a single LangSmith trace. Step through with the buttons or your arrow keys.</p>
+    </div>
+    <div class="legend" aria-label="Legend">
+      <span><i class="sw" style="background:var(--nb)"></i>Notebook process</span>
+      <span><i class="sw" style="background:var(--srv)"></i>MCP server process</span>
+      <span><i class="sw" style="background:var(--ext)"></i>External service</span>
+      <span><i class="sw" style="background:var(--trace)"></i>Active step</span>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button role="tab" id="tab-walk" aria-selected="true" aria-controls="view-walk">Request sequence</button>
+    <button role="tab" id="tab-tree" aria-selected="false" aria-controls="view-tree">Span tree</button>
+    <button role="tab" id="tab-runs" aria-selected="false" aria-controls="view-runs">The five runs</button>
+    <button role="tab" id="tab-quiz" aria-selected="false" aria-controls="view-quiz">Check yourself</button>
+  </nav>
+
+  <section id="view-walk" role="tabpanel" aria-labelledby="tab-walk">
+    <div class="grid">
+      <div class="panel diagram">
+        <div class="svgbox"><svg id="seq" viewBox="0 0 720 620" role="img" aria-label="Sequence diagram of a LexAgent request"></svg></div>
+        <div class="bar"><i id="bar"></i></div>
+        <div class="controls">
+          <button class="btn" id="prev">Previous</button>
+          <button class="btn primary" id="next">Next step</button>
+          <button class="btn" id="play">Autoplay</button>
+          <span class="count" id="count">1 / 14</span>
+        </div>
+        <ol class="steplist" id="steplist"></ol>
+      </div>
+      <article class="panel dossier" id="dossier" aria-live="polite"></article>
+    </div>
+  </section>
+
+  <section id="view-tree" role="tabpanel" aria-labelledby="tab-tree" hidden>
+    <p class="section-intro">This is the trace Run-1 produces. Spans in teal were created in the MCP server process and nest here only because the notebook sent its trace context in the request headers. Select a span to see where it comes from and the metadata it carries.</p>
+    <div class="tree-grid">
+      <div class="panel tree" id="tree"></div>
+      <article class="panel span-detail" id="span-detail" aria-live="polite"></article>
+    </div>
+  </section>
+
+  <section id="view-runs" role="tabpanel" aria-labelledby="tab-runs" hidden>
+    <p class="section-intro">Each demo run in the notebook teaches one behavior. The tool sequence is the <code>tool_sequence</code> metadata field written on the root span, so you can filter for it in LangSmith. Score ranges are the notebook's expected values, not guarantees.</p>
+    <div class="runs" id="runs"></div>
+  </section>
+
+  <section id="view-quiz" role="tabpanel" aria-labelledby="tab-quiz" hidden>
+    <p class="section-intro">Six questions on the ideas in the notebook. Pick an answer and check it; the explanation appears after you check.</p>
+    <div class="quiz" id="quiz"></div>
+    <p class="score" id="quizscore" style="margin-top:16px"></p>
+  </section>
+</div>
+
+<script>
+const LANES = [
+  {id:"runner", name:"Runner", sub:"run_legal_agent", kind:"nb"},
+  {id:"agent",  name:"Agent node", sub:"LangGraph", kind:"nb"},
+  {id:"llm",    name:"LLM", sub:"gpt-4o-mini / 4o", kind:"ext"},
+  {id:"tools",  name:"Tools node", sub:"MCP client", kind:"nb"},
+  {id:"mcp",    name:"MCP server", sub:"FastMCP :8765", kind:"srv"},
+  {id:"ls",     name:"LangSmith", sub:"trace store", kind:"ext"}
+];
+const X = {runner:62, agent:180, llm:298, tools:416, mcp:534, ls:652};
+
+const STEPS = [
+ {t:"Configure tracing and start the tool server", sec:"Sections 1–6", proc:["nb","srv"],
+  msgs:[{f:"runner",to:"mcp",y:110,l:"1 launch + connect"}],
+  concepts:[
+   ["Env vars before Runnables","LANGSMITH_TRACING and friends are set before any ChatOpenAI or graph is built. LangChain reads them at construction time, so setting them later silently records nothing."],
+   ["Fail loudly on bad credentials","A list_projects call checks the key. A wrong key otherwise fails silently: the agent works and traces never arrive."],
+   ["Server as a real process","legal_mcp_server.py runs under subprocess.Popen, logs to a file (a full pipe can block it), and the notebook polls the port instead of sleeping."],
+   ["Strict tool contract","get_tools() is async in langchain-mcp-adapters 0.1.x. The notebook stops unless exactly the five expected tools load."]],
+  code:`os.environ["LANGSMITH_TRACING"] = "true"
+os.environ["LANGSMITH_PROJECT"] = "lexagent-rental-law"
+llm = _build_agent_llm()   # temperature=0, seed probed
+
+mcp_server_process = subprocess.Popen(
+    [sys.executable, "legal_mcp_server.py"], stdout=server_log)
+wait_for_port("127.0.0.1", 8765)
+mcp_tools = await mcp_client.get_tools()`,
+  trace:{span:"build_vectorstore", meta:["collection","n_chunks","chunk_size","chunk_overlap"], note:"Ingestion is traced too, so embedding cost has a parent span instead of showing up as an orphan run."},
+  pit:"Setting LANGSMITH_TRACING after the LLM object exists. The agent still runs, which makes this hard to notice."},
+
+ {t:"The question enters the root span", sec:"Section 7.5", proc:["nb"],
+  msgs:[{f:"runner",to:"agent",y:142,l:"2 query + query_id"}],
+  concepts:[
+   ["Root span","run_legal_agent is @traceable, so every later span hangs under it."],
+   ["Correlation ID","query_id (for example run-1-deposit-cap) is written on the root and passed in astream config metadata. Every child span inherits it."],
+   ["State","LangGraph state is a message list plus step_count. The question is messages[0] for the whole run."]],
+  code:`@traceable(run_type="chain", name="run_legal_agent")
+async def run_legal_agent(query, show_steps=True, query_id=None):
+    async for update in app.astream(state_in, stream_mode="updates",
+        config={"metadata": {"query_id": query_id},
+                "tags": ["lexagent", "react", "mcp"]}):`,
+  trace:{span:"run_legal_agent → lexagent_react_graph", meta:["query_id","query_chars"], note:"Search LangSmith by query_id instead of by random hex run IDs."},
+  pit:"Generating a new random ID per span. A correlation ID only works if it is set once and inherited."},
+
+ {t:"Build the ReAct prompt and call the model", sec:"Section 7.1–7.2", proc:["nb","ext"],
+  msgs:[{f:"agent",to:"llm",y:174,l:"3 prompt, stop=Observation"}],
+  concepts:[
+   ["Full scratchpad","build_scratchpad replays every earlier Thought, Action and real Observation, so a later step such as the clause rewrite can use evidence from step 2."],
+   ["Tool schemas in the prompt","render_text_description_and_args lists each tool's arguments, and the prompt shows exactly what a valid Action Input looks like."],
+   ["Anti-hallucination stop","stop=['\\nObservation:'] halts generation before the model can invent a tool result. Observations only ever come from the server."]],
+  code:`formatted_prompt = react_prompt.format(
+    tools=TOOLS_DESC,
+    question=messages[0].content,
+    scratchpad=build_scratchpad(messages))
+
+response = llm.invoke(formatted_prompt, stop=["\\nObservation:"])`,
+  trace:{span:"agent → agent_node → build_scratchpad, ChatOpenAI", meta:["scratchpad_chars","n_messages_replayed","input_tokens","output_tokens"], note:"scratchpad_chars grows every turn. It explains creeping latency and token cost in long runs."},
+  pit:"Without the stop sequence the model writes its own Observation and then answers from that made-up evidence."},
+
+ {t:"Parse the model's Thought and Action", sec:"Section 7.2", proc:["nb"],
+  msgs:[{f:"llm",to:"agent",y:206,l:"4 Thought / Action",ret:true}],
+  concepts:[
+   ["Text-format contract","ReActSingleInputOutputParser turns the text into an AgentAction (call a tool) or AgentFinish (final answer)."],
+   ["Input repair","parse_tool_args fixes common slips: single-quoted dicts, or the model echoing a tool's schema back as {'title': ..., 'type': ...}."],
+   ["Outcome as data","The node writes outcome = tool_call, final_answer, malformed_react, arg_parse_error or step_cap_reached. Malformed turns loop back with a system note, never a fake observation."]],
+  code:`parsed = ReActSingleInputOutputParser().parse(llm_output)
+if isinstance(parsed, AgentFinish):
+    run.metadata["outcome"] = "final_answer"
+args = parse_tool_args(parsed.tool, parsed.tool_input)
+run.metadata["outcome"] = "tool_call"`,
+  trace:{span:"parse_tool_args", meta:["repair","schema_echo_repaired","raw_input_type","outcome"], note:"When the malformed-input rate rises, repair tells you which kind of mistake the model is making."},
+  pit:"Swallowing a parse failure as a final answer. The notebook flags it as malformed_react and retries within MAX_AGENT_STEPS = 8."},
+
+ {t:"Route to the tools node", sec:"Section 7.3–7.4", proc:["nb"],
+  msgs:[{f:"agent",to:"tools",y:238,l:"5 route = tools"}],
+  concepts:[
+   ["Conditional edge","should_continue returns tools, agent (format retry) or END. The graph enforces the loop instead of trusting the prompt."],
+   ["Routing as a metric","The chosen route is written to metadata, so the malformed-retry rate is something you can chart and alert on."]],
+  code:`if last.additional_kwargs.get("malformed_react"):
+    route, destination = "agent_retry_malformed", "agent"
+elif last.tool_calls:
+    route, destination = "tools", "tools"
+else:
+    route, destination = "end", END`,
+  trace:{span:"should_continue", meta:["route","step_count"], note:"A decision you have to read by hand is not a metric. A route field is."},
+  pit:"Returning the route without recording it. You lose the ability to group runs by how they ended."},
+
+ {t:"Cross the process boundary with trace context", sec:"Section 7.3", proc:["nb","srv"],
+  msgs:[{f:"tools",to:"mcp",y:270,l:"6 HTTP + langsmith-trace"}],
+  concepts:[
+   ["Distributed tracing","Before the call, tools_node copies run.to_headers() onto the MCP connection: langsmith-trace (the parent's dotted order) and baggage (run metadata, including query_id)."],
+   ["Real round trip","The tool runs over streamable HTTP at http://127.0.0.1:8765/mcp. This is a separate Python process, invisible to the notebook's tracer on its own."],
+   ["Best effort","Any failure in header propagation is swallowed. Losing nesting costs a tidy tree; raising would cost the tool call."]],
+  code:`headers = get_current_run_tree().to_headers()
+connection = mcp_client.connections["lexagent_tools"]
+connection["headers"] = {**(connection.get("headers") or {}), **headers}
+
+observation = await tool_map[name].ainvoke(args)   # MCP round trip`,
+  trace:{span:"tools → tools_node → policy_search_tool (client)", meta:["tool_name","trace_context_propagated","mcp_latency_ms"], note:"trace_context_propagated tells you whether the server spans should nest under this one."},
+  pit:"Assuming nesting across processes is automatic. Without the header, server spans land as separate root traces."},
+
+ {t:"The server runs the tool inside the parent span", sec:"Section 4", proc:["srv"],
+  msgs:[{self:"mcp",y:286,l:"7 run tool"}],
+  concepts:[
+   ["Hidden Context parameter","Each @mcp.tool() takes ctx: Context. FastMCP injects it and leaves it out of the JSON schema, so the LLM never sees it."],
+   ["Re-parenting","_parent_from_ctx reads langsmith-trace from the request headers and opens tracing_context(parent=...). Missing header means parent=None, a no-op."],
+   ["Scope guard first","parse_query is rule-based and deterministic. No housing keywords means OUT_OF_SCOPE, and scope becomes filterable metadata."],
+   ["Retriever spans","Chroma lookups are run_type='retriever', so LangSmith shows the retrieved chunks as documents and separates retrieval latency."]],
+  code:`@mcp.tool()
+def policy_search_tool(query: str, ctx: Context = None) -> str:
+    with tracing_context(parent=_parent_from_ctx(ctx)):
+        return _policy_search(query)
+
+@traceable(run_type="retriever", name="policy_vectorstore_search")
+def _policy_retrieve(query, k=2): ...`,
+  trace:{span:"policy_search_tool (server) → policy_vectorstore_search", meta:["scope","intent","n_docs","pages","sources"], note:"rewrite_legal_clause also gets a nested ChatOpenAI span with its own token cost, previously invisible."},
+  pit:"Adding ctx to the tool and worrying it breaks the prompt. It does not; FastMCP strips it from the advertised schema."},
+
+ {t:"The result returns to the client", sec:"Section 7.3", proc:["srv","nb"],
+  msgs:[{f:"mcp",to:"tools",y:338,l:"8 tool result",ret:true}],
+  concepts:[
+   ["Status as metadata","tools_node records tool_status: ok, tool_error, unknown_tool or parse_error_no_mcp_call."],
+   ["Latency by layer","mcp_latency_ms covers the round trip. Compare it with the server's retriever span to see transport overhead versus search time."]],
+  code:`run.metadata["mcp_latency_ms"] = round((time.time() - t0) * 1000, 1)
+run.metadata["tool_status"] = status
+run.metadata["observation_chars"] = len(str(observation))`,
+  trace:{span:"tools_node", meta:["tool_status","mcp_latency_ms","observation_chars"], note:"A rising tool_error rate is an alert, not something to discover by reading answers."},
+  pit:"Hiding tool errors inside the answer text. Here they become recoverable observations with an explicit status."},
+
+ {t:"Append the Observation", sec:"Section 7.3", proc:["nb"],
+  msgs:[{f:"tools",to:"agent",y:370,l:"9 ToolMessage",ret:true}],
+  concepts:[
+   ["Evidence vs system notes","Real outputs become ToolMessage observations. A parse error is labeled as a system response, and no MCP call is made for it."],
+   ["Edge back to the agent","workflow.add_edge('tools', 'agent') makes the loop unconditional after every tool call."]],
+  code:`return {"messages": [ToolMessage(content=str(observation),
+                                 tool_call_id=tool_call["id"], name=name)],
+        "step_count": state["step_count"]}`,
+  trace:{span:"tools", meta:["observation_chars"], note:"The printed output marks this with the eyes icon; parse errors get a warning icon."},
+  pit:"Presenting an error string as if a tool returned it. The judge would then grade the answer against non-evidence."},
+
+ {t:"Loop: reason again with the new evidence", sec:"Sections 9–13", proc:["nb","ext"],
+  msgs:[{f:"agent",to:"llm",y:402,l:"10 prompt + history"}],
+  concepts:[
+   ["Self-directed tool choice","In Run-5 policy_search_tool returns general eviction law with nothing on the 2024 Good Cause Eviction Law. The next Thought should name that gap and choose tavily_web_search_tool on its own."],
+   ["Bounded loop","MAX_AGENT_STEPS = 8 caps reasoning turns; recursion_limit = 50 is LangGraph's own safety net."],
+   ["Grounded rewrite","rewrite_legal_clause takes the previously retrieved excerpts as arguments, so the rewrite is grounded in evidence the trace shows."]],
+  code:`parse_query > policy_search_tool > cases_search_tool > tavily_web_search_tool
+# Run-2 tool_sequence, read straight off the root span metadata`,
+  trace:{span:"agent_node (2nd, 3rd, ... turn)", meta:["step_count","scratchpad_chars","tool_requested"], note:"Read the Thought before each tool call to tell reasoning apart from instruction-following."},
+  pit:"Judging only the final answer. The order of tools and the Thought before each one show whether the agent reasoned or guessed."},
+
+ {t:"The model gives a Final Answer", sec:"Section 7.2", proc:["ext","nb"],
+  msgs:[{f:"llm",to:"agent",y:434,l:"11 Final Answer",ret:true}],
+  concepts:[
+   ["AgentFinish","The parser returns AgentFinish, the node writes outcome = final_answer, and should_continue routes to END."],
+   ["Step cap fallback","If eight turns pass first, the node returns an explicit partial answer with outcome = step_cap_reached instead of failing silently."]],
+  code:`if isinstance(parsed, AgentFinish):
+    run.metadata["outcome"] = "final_answer"
+    return {"messages": [AIMessage(content=parsed.return_values["output"])]}`,
+  trace:{span:"agent_node (last turn)", meta:["outcome = final_answer"], note:"Count step_cap_reached outcomes: a rise usually means a prompt or tool-description regression."},
+  pit:"Treating a capped run as a normal answer. It is a distinct outcome and should be monitored separately."},
+
+ {t:"Roll up run-level metrics on the root", sec:"Section 7.5", proc:["nb"],
+  msgs:[{f:"agent",to:"runner",y:466,l:"12 answer + roll-ups",ret:true}],
+  concepts:[
+   ["Dashboard columns","The root span gets tool_sequence, n_tool_calls, n_malformed_turns, n_parse_errors and answered."],
+   ["Return the handle","run_legal_agent returns run_id and trace_url. run_id is what you need to attach feedback to this exact run later."]],
+  code:`run.metadata.update({
+    "tool_sequence": " > ".join(tool_calls_made),
+    "n_tool_calls": len(tool_calls_made),
+    "n_malformed_turns": malformed_turns,
+    "answered": bool(final_text)})
+return {"answer": final_text, "run_id": str(run.id), "trace_url": trace_url}`,
+  trace:{span:"run_legal_agent", meta:["tool_sequence","n_tool_calls","n_malformed_turns","answered"], note:"These fields replace log parsing: filter, chart and alert on them directly."},
+  pit:"Printing only the answer. Without run_id you cannot get from a bad output back to the trace that produced it."},
+
+ {t:"Both processes export spans to one trace", sec:"Section 15", proc:["nb","srv","ext"],
+  msgs:[{f:"runner",to:"ls",y:498,l:"13a notebook spans",ret:true},{f:"mcp",to:"ls",y:526,l:"13b server spans",ret:true}],
+  concepts:[
+   ["Background batching","Spans are batched and sent from a background thread in each process. LangSmith assembles them into one tree using the dotted order from the header."],
+   ["Flush order","wait_for_all_tracers() flushes the notebook, then a short pause lets the server export before terminate(). Skipping it drops the last run's leaf spans."],
+   ["Degrade, never break","With tracing off, every cell gives identical answers. Tracing records what happened; it does not change it."]],
+  code:`wait_for_all_tracers()          # 1. flush notebook queue
+time.sleep(3)                   # 2. let the server export
+mcp_server_process.terminate()  # 3. then stop it`,
+  trace:{span:"Whole tree", meta:["query_id on every span"], note:"If propagation failed, server spans still exist as separate roots in the same project."},
+  pit:"Terminating the server immediately. The trace looks like it is missing its leaves, which is not an instrumentation bug."},
+
+ {t:"Evaluate: task checks plus LLM-as-a-judge", sec:"Section 14", proc:["nb","ext"],
+  msgs:[{f:"runner",to:"llm",y:560,l:"14a judge gpt-4o"},{f:"runner",to:"ls",y:592,l:"14b scores as metadata"}],
+  concepts:[
+   ["One parent per evaluation","evaluate_query wraps run_and_capture, task_completion_metric and judge_answer. Without it you get three unrelated root traces per query."],
+   ["Deterministic checks","Six transcript checks: final answer, parse_query first, retrieval used, evidence captured, all tools succeeded, no malformed turns."],
+   ["Judge with a guard","gpt-4o scores groundedness, faithfulness, answer relevance and citation precision against the retrieved evidence, pass at 0.7. No context forces groundedness and citation precision to 0."],
+   ["Both layers needed","Run-4 scores 5/6 on task checks but 0 on groundedness. Neither layer alone catches every failure."]],
+  code:`@traceable(run_type="chain", name="evaluate_query")
+async def evaluate_query(label, query, query_id):
+    answer, context, messages, run_id = await run_and_capture(query, query_id)
+    tc_score = task_completion_metric(answer, messages)
+    judge_scores = judge_answer(query, answer, context)`,
+  trace:{span:"evaluate_query → run_and_capture, task_completion_metric, llm_as_judge", meta:["task_completion_score","judge_groundedness","agent_run_id"], note:"Compare score distributions over many runs; temperature 0 reduces variance but does not remove it."},
+  pit:"Decorating every function and losing the tree. A decorator creates a span; it does not decide its parent."}
+];
+
+const TREE = {n:"run_legal_agent", rt:"chain", p:"nb", meta:["query_id","tool_sequence","n_tool_calls","answered"], d:"Root span created by the @traceable runner. Holds the run-level roll-ups.", kids:[
+  {n:"lexagent_react_graph", rt:"chain", p:"nb", meta:["query_id (from config)","tags: lexagent, react, mcp"], d:"Created automatically by LangGraph because the compiled graph is a Runnable.", kids:[
+    {n:"agent", rt:"chain", p:"nb", meta:["node span"], d:"LangGraph node span, added automatically around the node function.", kids:[
+      {n:"agent_node", rt:"chain", p:"nb", meta:["step_count","outcome","tool_requested","total_tokens"], d:"@traceable on the node function. Records what this ReAct turn decided.", kids:[
+        {n:"build_scratchpad", rt:"parser", p:"nb", meta:["scratchpad_chars","n_messages_replayed"], d:"Measures how much history is replayed each turn."},
+        {n:"ChatOpenAI", rt:"llm", p:"ext", meta:["tokens","cost","latency"], d:"Automatic LangChain instrumentation of the model call."},
+        {n:"parse_tool_args", rt:"parser", p:"nb", meta:["repair","schema_echo_repaired"], d:"Shows which repair fixed the model's Action Input, if any."}]}]},
+    {n:"should_continue", rt:"parser", p:"nb", meta:["route","step_count"], d:"Routing decision recorded as a filterable field."},
+    {n:"tools", rt:"chain", p:"nb", meta:["node span"], d:"LangGraph node span for the tools node.", kids:[
+      {n:"tools_node", rt:"tool", p:"nb", meta:["tool_status","mcp_latency_ms","trace_context_propagated"], d:"Writes the trace headers onto the MCP connection, then makes the call.", kids:[
+        {n:"policy_search_tool (client)", rt:"tool", p:"nb", meta:["input","output"], d:"Automatic span for the MCP client round trip, seen from the notebook."},
+        {n:"policy_search_tool (server)", rt:"tool", p:"srv", meta:["parent from langsmith-trace header"], d:"Created in the server process. It nests here because the server opened tracing_context with the parent from the request headers.", kids:[
+          {n:"policy_vectorstore_search", rt:"retriever", p:"srv", meta:["collection","k","n_docs","pages"], d:"Chroma similarity search as a retriever span; LangSmith renders the chunks as documents."}]}]}]}]}]};
+
+const RUNS = [
+ {n:"Run-1",t:"Security deposit cap",q:"Landlord wants 12 months of rent as a deposit on a three-year NYC lease. Legal?",seq:["parse_query","policy_search_tool"],lesson:"A clean retrieval run. Use it as the baseline trace shape.",s:[["Task completion","6/6"],["Groundedness","0.80–0.95"],["Citation precision","0.60–0.80"]]},
+ {n:"Run-2",t:"Non-payment and Airbnb sublet",q:"Can the landlord evict quickly, change the locks, or remove belongings?",seq:["parse_query","policy_search_tool","cases_search_tool","tavily (optional)"],lesson:"Multi-source reasoning. The answer must say self-help lockouts are illegal.",s:[["Task completion","6/6"],["Groundedness","0.78–0.92"],["Citation precision","0.50–0.75"]]},
+ {n:"Run-3",t:"Rewrite a draft lease",q:"Seven non-compliant clauses: $300 late fee, lockout, waived notices, and more.",seq:["parse_query","policy_search_tool","cases_search_tool","rewrite_legal_clause"],lesson:"The rewrite tool takes retrieved evidence as arguments, and its nested LLM call is a server-side span.",s:[["Task completion","6/6"],["Groundedness","0.72–0.90"],["Answer relevance","0.88–1.00"]]},
+ {n:"Run-4",t:"Out of scope, by design",q:"Withheld salary and wrongful termination after a harassment complaint.",seq:["parse_query → OUT_OF_SCOPE"],lesson:"Task checks give 5/6 while groundedness is forced to 0. You need both evaluation layers.",s:[["Task completion","5/6"],["Groundedness","0.00",1],["Citation precision","0.00",1]]},
+ {n:"Run-5",t:"Good Cause Eviction Law",q:"Does the 2024 law protect a non-stabilized tenant from no-fault non-renewal?",seq:["parse_query","policy_search_tool","tavily_web_search_tool"],lesson:"The local corpus predates the law. The agent should notice the gap and choose web search itself.",s:[["Task completion","5/6–6/6"],["Groundedness","0.60–0.82"],["Faithfulness","0.72–0.92"]]}
+];
+
+const QUIZ = [
+ {q:"Why does agent_node call the LLM with stop=['\\nObservation:']?",o:["To save output tokens on long answers","To stop the model from writing its own fake tool results","Because the MCP server requires it","To force the model to call parse_query first"],a:1,e:"Generation halts before the model can invent an Observation, so every observation in the transcript comes from a real MCP call."},
+ {q:"How do spans created in the MCP server process end up nested under the notebook's tools_node span?",o:["Both processes share one Python tracer object","LangSmith matches spans by timestamp","tools_node sends its langsmith-trace and baggage headers, and the server opens tracing_context(parent=...) from them","FastMCP forwards spans back to the notebook over stdout"],a:2,e:"This is distributed tracing: the parent's context travels in HTTP headers and the server re-parents its spans."},
+ {q:"If the trace headers fail to reach the server, what happens?",o:["The tool call raises and the run fails","Server spans are still recorded, as separate root traces in the same project","No spans are recorded anywhere","The agent retries the call without tracing"],a:1,e:"Propagation is best effort. Recording degrades; it never breaks the tool call."},
+ {q:"Run-4 scores 5/6 on task completion. What is the lesson?",o:["The agent is mostly working","Task checks and the judge catch different failures; groundedness is 0 because nothing was retrieved","The judge is too strict","parse_query has a bug"],a:1,e:"Protocol checks passed, but the answer has zero evidence behind it. Only the judge layer shows that."},
+ {q:"Why does evaluate_query exist if its three inner functions are already @traceable?",o:["To make evaluation faster","A decorator creates a span but not its parent; without the wrapper each call is its own root trace","To run the judge on a different model","LangSmith requires one function per trace"],a:1,e:"Wrapping them puts the agent run and both scores in one tree tied to one query_id."},
+ {q:"Does adding ctx: Context to an @mcp.tool() change what the LLM sees in the tool schema?",o:["Yes, the model must now pass a ctx argument","Yes, but only for multi-argument tools","No, FastMCP injects it and leaves it out of the advertised schema","No, because the notebook deletes it before rendering"],a:2,e:"The ReAct prompt and Action Input contract are unchanged, so tracing can be added without touching agent behavior."}
+];
+
+const NS="http://www.w3.org/2000/svg";
+const svg=document.getElementById("seq");
+function el(n,a,t){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(t!=null)e.textContent=t;return e}
+const kindVar={nb:["--nb","--nb-soft"],srv:["--srv","--srv-soft"],ext:["--ext","--ext-soft"]};
+
+function drawDiagram(){
+  const defs=el("defs",{});
+  const m=el("marker",{id:"ah",viewBox:"0 0 10 10",refX:"8",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"});
+  m.appendChild(el("path",{d:"M2 1L8 5L2 9",fill:"none",stroke:"context-stroke","stroke-width":"1.6","stroke-linecap":"round"}));
+  defs.appendChild(m);svg.appendChild(defs);
+  LANES.forEach(l=>{
+    const x=X[l.id],[s,f]=kindVar[l.kind];
+    svg.appendChild(el("line",{class:"ll-line",x1:x,y1:84,x2:x,y2:608}));
+    const g=el("g",{});
+    g.appendChild(el("rect",{class:"ll-box",x:x-54,y:28,width:108,height:52,rx:8,style:`fill:var(${f});stroke:var(${s})`}));
+    g.appendChild(el("text",{x:x,y:50,"text-anchor":"middle",style:`fill:var(${s});font-size:14px;font-weight:600`},l.name));
+    g.appendChild(el("text",{x:x,y:68,"text-anchor":"middle",style:`fill:var(--muted);font-size:11.5px`},l.sub));
+    svg.appendChild(g);
+  });
+  svg.appendChild(el("rect",{class:"loopbox",x:140,y:156,width:436,height:290,rx:6}));
+  svg.appendChild(el("text",{x:148,y:170,style:"fill:var(--muted);font-size:12px;font-family:var(--mono)"},"loop until Final Answer"));
+  STEPS.forEach((s,i)=>s.msgs.forEach(mg=>{
+    const g=el("g",{class:"msg"+(mg.ret?" ret":""),"data-step":i});
+    if(mg.self){const x=X[mg.self];
+      g.appendChild(el("rect",{class:"self",x:x-46,y:mg.y,width:92,height:32,rx:5}));
+      g.appendChild(el("text",{x:x,y:mg.y+20,"text-anchor":"middle"},mg.l));
+    }else{
+      const x1=X[mg.f],x2=X[mg.to],dir=x2>x1?1:-1;
+      g.appendChild(el("line",{x1:x1,y1:mg.y,x2:x2-dir*3,y2:mg.y,"marker-end":"url(#ah)"}));
+      g.appendChild(el("text",{x:dir>0?x1+8:x1-8,y:mg.y-7,"text-anchor":dir>0?"start":"end"},mg.l));
+    }
+    g.style.cursor="pointer";g.addEventListener("click",()=>go(i));
+    svg.appendChild(g);
+  }));
+}
+
+let cur=0,timer=null;
+const dossier=document.getElementById("dossier");
+const procPill={nb:'<span class="pill nb">notebook</span>',srv:'<span class="pill srv">MCP server</span>',ext:'<span class="pill ext">external</span>'};
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function render(){
+  const s=STEPS[cur];
+  svg.querySelectorAll(".msg").forEach(g=>{const n=+g.dataset.step;g.classList.toggle("on",n===cur);g.classList.toggle("done",n<cur)});
+  document.getElementById("count").textContent=`${cur+1} / ${STEPS.length}`;
+  document.getElementById("bar").style.width=`${(cur+1)/STEPS.length*100}%`;
+  document.getElementById("prev").disabled=cur===0;
+  document.getElementById("next").textContent=cur===STEPS.length-1?"Start over":"Next step";
+  document.querySelectorAll("#steplist button").forEach((b,i)=>{if(i===cur)b.setAttribute("aria-current","step");else b.removeAttribute("aria-current")});
+  dossier.innerHTML=`
+   <div class="step-head">
+     <div class="eyebrow">Step ${cur+1} · ${esc(s.sec)}</div>
+     <h2>${esc(s.t)}</h2>
+     <div class="where">${s.proc.map(p=>procPill[p]).join("")}</div>
+   </div>
+   <div class="concepts">${s.concepts.map((c,i)=>`<div class="concept"><span class="k">${String.fromCharCode(97+i)}</span><p><b>${esc(c[0])}.</b> ${esc(c[1])}</p></div>`).join("")}</div>
+   <pre><code></code></pre>
+   <div class="trace-card"><span class="lbl">In LangSmith</span><p class="mono">${esc(s.trace.span)}</p>
+     <div class="kv">${s.trace.meta.map(m=>`<code>${esc(m)}</code>`).join("")}</div><p>${esc(s.trace.note)}</p></div>
+   <div class="pitfall"><span class="lbl">Common mistake</span><p>${esc(s.pit)}</p></div>`;
+  dossier.querySelector("pre code").textContent=s.code;
+}
+function go(i){cur=(i+STEPS.length)%STEPS.length;render()}
+function stopPlay(){clearInterval(timer);timer=null;document.getElementById("play").textContent="Autoplay"}
+document.getElementById("next").onclick=()=>{stopPlay();go(cur+1)};
+document.getElementById("prev").onclick=()=>{stopPlay();go(cur-1)};
+document.getElementById("play").onclick=()=>{
+  if(timer){stopPlay();return}
+  document.getElementById("play").textContent="Pause";
+  timer=setInterval(()=>{if(cur===STEPS.length-1){stopPlay();return}go(cur+1)},5000);
+};
+document.addEventListener("keydown",e=>{
+  if(document.getElementById("view-walk").hidden||e.target.closest("input,textarea"))return;
+  if(e.key==="ArrowRight"){stopPlay();go(cur+1)}
+  if(e.key==="ArrowLeft"){stopPlay();go(cur-1)}
+});
+const sl=document.getElementById("steplist");
+STEPS.forEach((s,i)=>{const li=document.createElement("li");const b=document.createElement("button");
+  b.innerHTML=`<span>${String(i+1).padStart(2,"0")}</span>${esc(s.t.split(" ").slice(0,4).join(" "))}`;
+  b.title=s.t;b.onclick=()=>{stopPlay();go(i)};li.appendChild(b);sl.appendChild(li)});
+
+/* span tree */
+const treeHost=document.getElementById("tree"),spanDetail=document.getElementById("span-detail");
+const rtColor={nb:"var(--nb)",srv:"var(--srv)",ext:"var(--ext)"};
+let treeBtns=[];
+function buildTree(node){
+  const li=document.createElement("li");const b=document.createElement("button");
+  b.setAttribute("aria-pressed","false");
+  b.innerHTML=`<i class="dot" style="background:${rtColor[node.p]}"></i>${esc(node.n)} <span class="rt">${node.rt}</span>`;
+  b.onclick=()=>showSpan(node,b);treeBtns.push(b);li.appendChild(b);
+  if(node.kids){const ul=document.createElement("ul");node.kids.forEach(k=>ul.appendChild(buildTree(k)));li.appendChild(ul)}
+  return li;
+}
+function showSpan(node,b){
+  treeBtns.forEach(x=>x.setAttribute("aria-pressed","false"));b.setAttribute("aria-pressed","true");
+  const proc={nb:"Notebook process",srv:"MCP server process",ext:"External call, recorded by the notebook"}[node.p];
+  spanDetail.innerHTML=`<div class="eyebrow">run_type · ${node.rt}</div><h2 class="mono" style="font-family:var(--mono);font-size:19px;word-break:break-word">${esc(node.n)}</h2>
+   <div class="where">${procPill[node.p]}</div><p>${esc(node.d)}</p>
+   <div class="trace-card"><span class="lbl">Metadata to filter on</span><div class="kv">${node.meta.map(m=>`<code>${esc(m)}</code>`).join("")}</div></div>
+   <p class="muted" style="font-size:14px">Process: ${proc}</p>`;
+}
+const rootUl=document.createElement("ul");rootUl.appendChild(buildTree(TREE));treeHost.appendChild(rootUl);
+showSpan(TREE.kids[0].kids[2].kids[0].kids[1],treeBtns.find(b=>b.textContent.startsWith("policy_search_tool (server)")));
+
+/* runs */
+document.getElementById("runs").innerHTML=RUNS.map(r=>`<article class="panel run">
+  <div><div class="eyebrow">${r.n}</div><h3 style="font-size:20px;margin-top:2px">${esc(r.t)}</h3></div>
+  <p class="muted" style="font-size:15px">${esc(r.q)}</p>
+  <div class="seqchips">${r.seq.map(t=>`<span class="pill tr">${esc(t)}</span>`).join('<span class="arrow">›</span>')}</div>
+  <p>${esc(r.lesson)}</p>
+  <table class="scores">${r.s.map(x=>`<tr><td>${x[0]}</td><td class="${x[2]?"fail":""}">${x[1]}</td></tr>`).join("")}</table>
+ </article>`).join("");
+
+/* quiz */
+const qHost=document.getElementById("quiz");const answered={};
+QUIZ.forEach((q,i)=>{
+  const d=document.createElement("article");d.className="panel q";
+  d.innerHTML=`<div class="eyebrow">Question ${i+1}</div><h3>${esc(q.q)}</h3>
+   <div class="opts" role="radiogroup">${q.o.map((o,j)=>`<label for="q${i}o${j}"><input type="radio" name="q${i}" id="q${i}o${j}" value="${j}"><span>${esc(o)}</span></label>`).join("")}</div>
+   <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn" id="qb${i}">Check answer</button><span class="qerr" id="qe${i}"></span></div>
+   <p class="qfeed" id="qf${i}" hidden></p>`;
+  qHost.appendChild(d);
+  d.querySelectorAll("input").forEach(inp=>inp.addEventListener("change",()=>{d.querySelector(".qerr").textContent=""}));
+  d.querySelector(`#qb${i}`).onclick=()=>{
+    const sel=d.querySelector("input:checked");
+    if(!sel){d.querySelector(".qerr").textContent="Choose an answer first.";return}
+    const v=+sel.value;answered[i]=v===q.a;
+    d.querySelectorAll("label").forEach((l,j)=>{l.classList.remove("right","wrong");if(j===q.a)l.classList.add("right");else if(j===v)l.classList.add("wrong")});
+    const f=d.querySelector(".qfeed");f.hidden=false;
+    f.innerHTML=`<b style="color:${v===q.a?"var(--ok)":"var(--bad)"}">${v===q.a?"Correct.":"Not quite."}</b> ${esc(q.e)}`;
+    const n=Object.keys(answered).length,c=Object.values(answered).filter(Boolean).length;
+    document.getElementById("quizscore").textContent=`Score: ${c} of ${n} checked${n===QUIZ.length?" (all questions answered)":""}`;
+  };
+});
+
+/* tabs */
+const tabs=[...document.querySelectorAll('[role="tab"]')];
+function selectTab(t){tabs.forEach(x=>{const on=x===t;x.setAttribute("aria-selected",on);document.getElementById(x.getAttribute("aria-controls")).hidden=!on});
+  if(t.id!=="tab-walk")stopPlay();
+  try{localStorage.setItem("lex-tab",t.id)}catch(e){}}
+tabs.forEach(t=>t.onclick=()=>selectTab(t));
+const hashMap={sequence:"tab-walk",tree:"tab-tree",runs:"tab-runs",quiz:"tab-quiz"};
+let start=hashMap[location.hash.slice(1)];
+if(!start){try{start=localStorage.getItem("lex-tab")}catch(e){}}
+if(start&&document.getElementById(start))selectTab(document.getElementById(start));
+
+drawDiagram();render();
+</script>

@@ -1,0 +1,252 @@
+<title>LexAgent Local Tracing</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: single reading column with a sticky section index on wide screens; same token system as the LexAgent walkthrough. */
+:root{
+  --bg:#eef1f4; --surface:#ffffff; --sunk:#e4e8ed; --ink:#16202b; --muted:#566273; --line:#d3d9e0;
+  --nb:#3b50bf; --nb-soft:#e6e9fa; --srv:#0d7466; --srv-soft:#dcf1ec;
+  --trace:#b86d00; --trace-soft:#fbefd9; --ok:#1d7a3a; --ok-soft:#e1f2e5; --bad:#b3261e; --bad-soft:#fbe3e1;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161d; --surface:#18202a; --sunk:#0d1218; --ink:#e6ebf1; --muted:#9aa6b5; --line:#2b3542;
+  --nb:#8fa0ff; --nb-soft:#222a52; --srv:#4fcfb8; --srv-soft:#123a34;
+  --trace:#f2b04a; --trace-soft:#3b2a0d; --ok:#6bd28a; --ok-soft:#14321f; --bad:#ff8a80; --bad-soft:#3d1714; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161d; --surface:#18202a; --sunk:#0d1218; --ink:#e6ebf1; --muted:#9aa6b5; --line:#2b3542;
+  --nb:#8fa0ff; --nb-soft:#222a52; --srv:#4fcfb8; --srv-soft:#123a34;
+  --trace:#f2b04a; --trace-soft:#3b2a0d; --ok:#6bd28a; --ok-soft:#14321f; --bad:#ff8a80; --bad-soft:#3d1714; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.65;margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding-block:32px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px}
+@media (max-width:860px){.wrap{grid-template-columns:minmax(0,1fr);gap:24px}}
+aside.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;font-size:14px}
+@media (max-width:860px){aside.toc{position:static}}
+aside.toc ol{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:2px}
+aside.toc a{display:block;color:var(--muted);text-decoration:none;padding:4px 10px;border-left:2px solid var(--line)}
+aside.toc a:hover,aside.toc a.on{color:var(--ink);border-left-color:var(--trace)}
+@media (max-width:860px){aside.toc ol{flex-direction:row;flex-wrap:wrap;gap:6px}aside.toc a{border:1px solid var(--line);border-radius:999px;padding:3px 12px}}
+main{min-width:0;display:flex;flex-direction:column;gap:44px}
+main>section{display:flex;flex-direction:column;gap:16px;max-width:760px;scroll-margin-top:20px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(30px,4.4vw,44px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:26px;font-weight:700}
+h3{font-size:18px;font-weight:500}
+p{margin:0}
+a{color:var(--nb)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{color:var(--muted);font-size:19px;max-width:62ch}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);border:1px solid var(--line);border-radius:5px;padding:0 5px}
+.code{position:relative;min-width:0}
+.code pre{margin:0;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:16px 16px 16px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;line-height:1.6;color:var(--ink)}
+.code .label{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.copy{font:600 12px var(--body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:3px 10px;cursor:pointer}
+.copy:hover{border-color:var(--muted)}
+button:focus-visible,a:focus-visible{outline:2px solid var(--trace);outline-offset:2px}
+.note{border-left:3px solid var(--trace);background:var(--trace-soft);padding:12px 16px;border-radius:0}
+.note b{color:var(--trace)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.card a.go{font-weight:600;text-decoration:none;font-size:15px}
+.tag{align-self:flex-start;font-family:var(--mono);font-size:11.5px;border-radius:999px;padding:1px 10px}
+.tag.rec{background:var(--ok-soft);color:var(--ok)}
+.tag.min{background:var(--nb-soft);color:var(--nb)}
+.tag.ent{background:var(--sunk);color:var(--muted)}
+ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:22px}
+ol.steps>li{counter-increment:s;display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px}
+ol.steps>li::before{content:counter(s);font-family:var(--mono);font-size:13px;width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;margin-top:2px}
+ol.steps>li>div{display:flex;flex-direction:column;gap:10px;min-width:0}
+.tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:15px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--sunk)}
+tr:last-child td{border-bottom:0}
+td.y{color:var(--ok)} td.n{color:var(--bad)}
+.map{display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);gap:8px 6px;align-items:center;font-size:15px}
+.map .h{font-family:var(--mono);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.map .a{background:var(--nb-soft);color:var(--nb);border-radius:8px;padding:6px 10px;font-family:var(--mono);font-size:13px;min-width:0;overflow-wrap:anywhere}
+.map .b{background:var(--srv-soft);color:var(--srv);border-radius:8px;padding:6px 10px;font-family:var(--mono);font-size:13px;min-width:0;overflow-wrap:anywhere}
+.map .arr{text-align:center;color:var(--muted)}
+ul.plain{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+html{scroll-behavior:smooth}
+</style>
+
+<div class="wrap">
+  <aside class="toc" aria-label="On this page">
+    <div class="eyebrow">On this page</div>
+    <ol id="toc">
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#phoenix">Option 1: Phoenix</a></li>
+      <li><a href="#metadata">Keep custom spans</a></li>
+      <li><a href="#jsonl">Option 2: JSON files</a></li>
+      <li><a href="#selfhost">Option 3: Self-host</a></li>
+      <li><a href="#compare">Compare</a></li>
+    </ol>
+  </aside>
+
+  <main>
+    <section id="overview">
+      <div class="eyebrow">Week 15 · LexAgent notebook</div>
+      <h1>Keep your LexAgent traces on your own machine</h1>
+      <p class="lede">Switching from LangSmith to local tracing takes two changes: stop sending spans to LangSmith, and point them at something that stores data locally. Pick one of three routes, depending on whether you want a trace viewer or only files.</p>
+      <div class="note"><b>Running in Colab?</b> There, "local" means the Colab VM, which is wiped when the session ends. To keep traces on your own computer, run the notebook in Jupyter on your laptop, or download the trace files before the session closes.</div>
+      <div class="cards">
+        <div class="card"><span class="tag rec">recommended</span><h3>Arize Phoenix</h3><p>Open-source trace viewer on localhost. Stores traces in SQLite under <code>~/.phoenix</code>.</p><a class="go" href="#phoenix">Set it up →</a></div>
+        <div class="card"><span class="tag min">no installs</span><h3>JSON Lines file</h3><p>A small callback handler writes each run tree to a file you can load with pandas.</p><a class="go" href="#jsonl">See the code →</a></div>
+        <div class="card"><span class="tag ent">enterprise</span><h3>Self-hosted LangSmith</h3><p>Your existing code works unchanged, but self-hosting needs an Enterprise license.</p><a class="go" href="#selfhost">Read more →</a></div>
+      </div>
+    </section>
+
+    <section id="phoenix">
+      <div class="eyebrow">Option 1</div>
+      <h2>Arize Phoenix</h2>
+      <p>Phoenix has a span tree, token counts, latency, and inputs and outputs, much like LangSmith. It is built on OpenTelemetry, so it also handles the notebook's two processes.</p>
+      <ol class="steps">
+        <li><div>
+          <h3>Install and start the viewer</h3>
+          <p>Run this in a terminal, or prefix each line with <code>!</code> in a notebook cell.</p>
+          <div class="code"><div class="label"><span>terminal</span><button class="copy">Copy</button></div><pre><code>pip install arize-phoenix openinference-instrumentation-langchain
+phoenix serve        # UI at http://localhost:6006</code></pre></div>
+        </div></li>
+        <li><div>
+          <h3>Turn LangSmith off and Phoenix on</h3>
+          <p>In Section 2, replace the <code>LANGSMITH_*</code> block with this.</p>
+          <div class="code"><div class="label"><span>notebook · Section 2</span><button class="copy">Copy</button></div><pre><code>os.environ["LANGSMITH_TRACING"] = "false"     # @traceable becomes a no-op
+os.environ["LANGCHAIN_TRACING_V2"] = "false"
+
+from phoenix.otel import register
+from openinference.instrumentation.langchain import LangChainInstrumentor
+
+tracer_provider = register(
+    project_name="lexagent-rental-law",
+    endpoint="http://localhost:6006/v1/traces",
+)
+LangChainInstrumentor().instrument(tracer_provider=tracer_provider)</code></pre></div>
+          <p>Also delete the <code>LangSmithClient()</code> connection check, and the <code>ls_client.get_run_url</code> call inside <code>_trace_url</code>.</p>
+        </div></li>
+        <li><div>
+          <h3>Instrument the MCP server too</h3>
+          <p>Add the same lines to the top of <code>legal_mcp_server.py</code>. That captures the nested <code>ChatOpenAI</code> call inside <code>rewrite_legal_clause</code>.</p>
+        </div></li>
+      </ol>
+      <p>With only these steps, every LLM call, tool call and LangGraph node is recorded with tokens and latency, and nothing leaves your machine.</p>
+    </section>
+
+    <section id="metadata">
+      <div class="eyebrow">Option 1, continued</div>
+      <h2>Keep your custom spans and metadata</h2>
+      <p>Once LangSmith is off, two things stop working:</p>
+      <ul class="plain">
+        <li>The <code>@traceable</code> spans and the metadata they write, such as <code>outcome</code>, <code>route</code>, <code>tool_status</code>, <code>scope</code> and <code>repair</code>.</li>
+        <li>The <code>langsmith-trace</code> header that links the notebook to the server.</li>
+      </ul>
+      <p>Both have direct OpenTelemetry equivalents. The idea stays the same; only the header name and the library change.</p>
+      <div class="map" aria-label="LangSmith to OpenTelemetry mapping">
+        <span class="h">LangSmith</span><span></span><span class="h">OpenTelemetry</span>
+        <span class="a">@traceable(name=...)</span><span class="arr">→</span><span class="b">tracer.start_as_current_span(...)</span>
+        <span class="a">run.metadata["outcome"] = ...</span><span class="arr">→</span><span class="b">span.set_attribute("outcome", ...)</span>
+        <span class="a">run.to_headers()</span><span class="arr">→</span><span class="b">propagate.inject(carrier)</span>
+        <span class="a">langsmith-trace header</span><span class="arr">→</span><span class="b">traceparent header</span>
+        <span class="a">tracing_context(parent=...)</span><span class="arr">→</span><span class="b">propagate.extract(headers)</span>
+      </div>
+      <div class="code"><div class="label"><span>notebook · a span with metadata</span><button class="copy">Copy</button></div><pre><code>from opentelemetry import trace
+tracer = trace.get_tracer("lexagent")
+
+def agent_node(state):
+    with tracer.start_as_current_span("agent_node") as span:
+        span.set_attribute("step_count", step_count)
+        ...
+        span.set_attribute("outcome", "tool_call")</code></pre></div>
+      <div class="code"><div class="label"><span>notebook · tools_node sends the trace context</span><button class="copy">Copy</button></div><pre><code>from opentelemetry.propagate import inject
+
+carrier = {}
+inject(carrier)        # adds the current span's "traceparent" header
+connection = mcp_client.connections["lexagent_tools"]
+connection["headers"] = {**(connection.get("headers") or {}), **carrier}</code></pre></div>
+      <div class="code"><div class="label"><span>legal_mcp_server.py · the server picks it up</span><button class="copy">Copy</button></div><pre><code>from opentelemetry.propagate import extract
+
+def _otel_parent(ctx):
+    try:
+        return extract(dict(ctx.request_context.request.headers))
+    except Exception:
+        return None     # tracing must never break a tool
+
+@mcp.tool()
+def policy_search_tool(query: str, ctx: Context = None) -> str:
+    with tracer.start_as_current_span("policy_search_tool",
+                                      context=_otel_parent(ctx)) as span:
+        span.set_attribute("tool", "policy_search_tool")
+        return _policy_search(query)</code></pre></div>
+      <div class="note"><b>Teaching point.</b> Moving from a vendor SDK to an open standard leaves the instrumentation pattern intact. Students who understand the LangSmith version already understand this one.</div>
+    </section>
+
+    <section id="jsonl">
+      <div class="eyebrow">Option 2</div>
+      <h2>Plain JSON files, no viewer</h2>
+      <p>If you only need a record on disk, a small LangChain callback handler writes each completed run tree to a JSON Lines file.</p>
+      <div class="code"><div class="label"><span>notebook · new cell</span><button class="copy">Copy</button></div><pre><code>from langchain_core.tracers.base import BaseTracer
+
+class JsonlTracer(BaseTracer):
+    def __init__(self, path="lexagent_traces.jsonl"):
+        super().__init__()
+        self.path = path
+
+    def _persist_run(self, run):
+        # Called once per root run, with all children in run.child_runs
+        with open(self.path, "a") as f:
+            f.write(json.dumps(run.dict(), default=str) + "\n")</code></pre></div>
+      <p>Pass it in the <code>astream</code> config in both <code>run_legal_agent</code> and <code>run_and_capture</code>:</p>
+      <div class="code"><div class="label"><span>notebook · Sections 7.5 and 14.1</span><button class="copy">Copy</button></div><pre><code>config={"callbacks": [JsonlTracer()], "metadata": {"query_id": query_id}, ...}</code></pre></div>
+      <p>It needs no extra installs, and each line is a full run tree. It has two limits:</p>
+      <ul class="plain">
+        <li>It only sees LangChain and LangGraph runs. Your <code>@traceable</code> metadata and the server-side spans are not captured.</li>
+        <li>There is no UI for browsing the trees.</li>
+      </ul>
+    </section>
+
+    <section id="selfhost">
+      <div class="eyebrow">Option 3</div>
+      <h2>Self-host LangSmith</h2>
+      <p>LangSmith can run on your own infrastructure with Docker or Kubernetes. Your existing code would work unchanged: you would only point <code>LANGSMITH_ENDPOINT</code> at your own server. Self-hosting requires an Enterprise license, so it's rarely practical for a course or a personal setup.</p>
+    </section>
+
+    <section id="compare">
+      <div class="eyebrow">Compare</div>
+      <h2>Which one to use</h2>
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>What you get</th><th>Phoenix</th><th>JSON file</th><th>Self-hosted LangSmith</th></tr></thead>
+          <tbody>
+            <tr><td>Trace viewer UI</td><td class="y">Yes</td><td class="n">No</td><td class="y">Yes</td></tr>
+            <tr><td>LLM, tool and graph spans</td><td class="y">Yes, automatic</td><td class="y">Yes</td><td class="y">Yes</td></tr>
+            <tr><td>Custom metadata (<code>outcome</code>, <code>route</code>)</td><td>After converting to OpenTelemetry</td><td class="n">No</td><td class="y">Yes, unchanged</td></tr>
+            <tr><td>MCP server spans in one tree</td><td>After adding <code>traceparent</code></td><td class="n">No</td><td class="y">Yes, unchanged</td></tr>
+            <tr><td>Code changes</td><td>Moderate</td><td>Small</td><td>One setting</td></tr>
+            <tr><td>Cost</td><td>Free, open source</td><td>Free</td><td>Enterprise license</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>For teaching, use Phoenix. Students keep a real trace viewer, everything stays on their machine, and converting <code>@traceable</code> to OpenTelemetry teaches the vendor-neutral form of the same ideas.</p>
+    </section>
+  </main>
+</div>
+
+<script>
+document.querySelectorAll(".copy").forEach(b=>{
+  b.addEventListener("click",async()=>{
+    const pre=b.closest(".code").querySelector("pre");
+    try{await navigator.clipboard.writeText(pre.innerText);b.textContent="Copied"}
+    catch(e){const r=document.createRange();r.selectNodeContents(pre);const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent="Selected"}
+    setTimeout(()=>b.textContent="Copy",1600);
+  });
+});
+const links=[...document.querySelectorAll("#toc a")];
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.toggle("on",l.getAttribute("href")==="#"+e.target.id))}})},{rootMargin:"-30% 0px -60% 0px"});
+document.querySelectorAll("main>section").forEach(s=>obs.observe(s));
+</script>

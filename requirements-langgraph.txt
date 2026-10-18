@@ -1,0 +1,6 @@
+-r requirements.txt
+# Tested with langgraph 1.2.16, langchain 1.4.6
+langgraph>=1.0,<2
+langchain>=1.0,<2
+langchain-openai>=1.0,<2
+tavily-python>=0.5     # optional web search

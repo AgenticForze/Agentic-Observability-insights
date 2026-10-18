@@ -1,0 +1,4 @@
+-r requirements.txt
+# Tested with openai-agents 0.24.0. Use a separate virtual environment from crewai.
+openai-agents>=0.24,<1
+tavily-python>=0.5     # optional web search

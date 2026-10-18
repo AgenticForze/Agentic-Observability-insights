@@ -1,0 +1,397 @@
+<title>LLM Observability Platform Picker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: decision workbench. Controls column (weights + must-haves) beside a live ranking; tabs switch to the full matrix, profiles and checklist. Same tokens as the LexAgent walkthrough. */
+:root{
+  --bg:#eef1f4; --surface:#ffffff; --sunk:#e4e8ed; --ink:#16202b; --muted:#566273; --line:#d3d9e0;
+  --nb:#3b50bf; --nb-soft:#e6e9fa; --srv:#0d7466; --srv-soft:#dcf1ec;
+  --trace:#b86d00; --trace-soft:#fbefd9; --ok:#1d7a3a; --ok-soft:#e1f2e5; --bad:#b3261e; --bad-soft:#fbe3e1; --warn:#8a6100; --warn-soft:#f6ecd0;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161d; --surface:#18202a; --sunk:#0d1218; --ink:#e6ebf1; --muted:#9aa6b5; --line:#2b3542;
+  --nb:#8fa0ff; --nb-soft:#222a52; --srv:#4fcfb8; --srv-soft:#123a34;
+  --trace:#f2b04a; --trace-soft:#3b2a0d; --ok:#6bd28a; --ok-soft:#14321f; --bad:#ff8a80; --bad-soft:#3d1714; --warn:#e8c46a; --warn-soft:#33290f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161d; --surface:#18202a; --sunk:#0d1218; --ink:#e6ebf1; --muted:#9aa6b5; --line:#2b3542;
+  --nb:#8fa0ff; --nb-soft:#222a52; --srv:#4fcfb8; --srv-soft:#123a34;
+  --trace:#f2b04a; --trace-soft:#3b2a0d; --ok:#6bd28a; --ok-soft:#14321f; --bad:#ff8a80; --bad-soft:#3d1714; --warn:#e8c46a; --warn-soft:#33290f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;margin:0}
+.wrap{max-width:1240px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(28px,4vw,42px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:22px;font-weight:700}
+h3{font-size:17px;font-weight:500}
+p{margin:0}
+a{color:var(--nb)}
+code{font-family:var(--mono);font-size:.85em}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+header.top{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-end;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.lede{max-width:66ch;color:var(--muted);margin-top:8px}
+.stamp{font-family:var(--mono);font-size:12px;color:var(--warn);background:var(--warn-soft);border-radius:999px;padding:3px 12px}
+nav.tabs{display:flex;gap:4px;margin:20px 0;flex-wrap:wrap}
+nav.tabs button{font:500 15px var(--body);color:var(--muted);background:transparent;border:1px solid transparent;border-radius:999px;padding:7px 16px;cursor:pointer}
+nav.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);border-color:var(--line)}
+nav.tabs button:hover{color:var(--ink)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--trace);outline-offset:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;min-width:0}
+.rank-grid{display:grid;grid-template-columns:330px minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:900px){.rank-grid{grid-template-columns:minmax(0,1fr)}}
+.controls{padding:20px;display:flex;flex-direction:column;gap:20px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:900px){.controls{position:static}}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 13px var(--body);background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 12px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.weights{display:flex;flex-direction:column;gap:12px}
+.w label{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.w label span:last-child{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.w input{width:100%;accent-color:var(--trace)}
+.w small{display:block;color:var(--muted);font-size:12.5px;line-height:1.4}
+.musts{display:flex;flex-direction:column;gap:8px}
+.musts label{display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer}
+.musts input{margin-top:4px;accent-color:var(--trace)}
+.ranking{padding:20px 22px;display:flex;flex-direction:column;gap:6px}
+.rank-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.row{display:grid;grid-template-columns:28px minmax(120px,190px) minmax(0,1fr) 52px;gap:12px;align-items:center;padding:10px 6px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:6px}
+.row:hover{background:var(--sunk)}
+.row:last-child{border-bottom:0}
+.row .pos{font-family:var(--mono);font-size:13px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.row .nm{font-weight:600;line-height:1.25}
+.row .nm small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+.track{height:12px;background:var(--sunk);border-radius:3px;overflow:hidden;display:flex}
+.seg{height:100%;transition:width .35s}
+.row .sc{font-family:var(--mono);font-size:14px;text-align:right;font-variant-numeric:tabular-nums}
+.row.out{opacity:.5}
+.row.out .track{background:repeating-linear-gradient(45deg,var(--sunk) 0 6px,var(--surface) 6px 12px)}
+.why{grid-column:2 / -1;font-size:13px;color:var(--bad)}
+.seglegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted);margin-top:10px}
+.seglegend span{display:inline-flex;gap:6px;align-items:center}
+.seglegend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.note{border-left:3px solid var(--trace);background:var(--trace-soft);padding:10px 14px;font-size:14px;border-radius:0}
+.detail{margin-top:18px;padding:18px 20px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.kv{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+/* matrix */
+.groups{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.mbox{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:980px;font-size:14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{font-family:var(--display);font-weight:500;font-size:14px;background:var(--sunk);position:sticky;top:0}
+tbody th{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;background:var(--surface);position:sticky;left:0}
+tr:last-child td,tr:last-child th{border-bottom:0}
+.v-yes{color:var(--ok)} .v-no{color:var(--bad)} .v-nc{color:var(--muted);font-style:italic}
+.lvl{display:inline-block;font-family:var(--mono);font-size:11.5px;border-radius:999px;padding:1px 9px;margin-right:4px}
+.l3{background:var(--ok-soft);color:var(--ok)} .l2{background:var(--nb-soft);color:var(--nb)} .l1{background:var(--warn-soft);color:var(--warn)} .l0{background:var(--bad-soft);color:var(--bad)}
+/* profiles */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.card{padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-family:var(--mono);font-size:11.5px;border-radius:999px;padding:1px 10px;background:var(--sunk);color:var(--muted)}
+.tag.g{background:var(--ok-soft);color:var(--ok)} .tag.r{background:var(--bad-soft);color:var(--bad)}
+ul.tight{margin:0;padding-left:18px;font-size:14.5px;display:flex;flex-direction:column;gap:3px}
+/* checklist */
+.check{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.crit{padding:18px 20px;display:flex;flex-direction:column;gap:8px}
+.crit .q{font-family:var(--mono);font-size:12px;color:var(--trace);text-transform:uppercase;letter-spacing:.06em}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);display:flex;flex-direction:column;gap:8px}
+footer ul{margin:0;padding-left:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:4px 24px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Week 15 · Monitoring and observability</div>
+      <h1>Choosing an LLM observability platform</h1>
+      <p class="lede">Nine platforms scored on seven criteria. Set how much each criterion matters to you, tick your must-haves, and the ranking updates. Scores are an editorial assessment from published 2026 comparisons, not benchmarks.</p>
+    </div>
+    <span class="stamp">Pricing as of mid-2026 · verify before buying</span>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button role="tab" id="tab-rank" aria-selected="true" aria-controls="view-rank">Rank for my needs</button>
+    <button role="tab" id="tab-matrix" aria-selected="false" aria-controls="view-matrix">Full comparison</button>
+    <button role="tab" id="tab-prof" aria-selected="false" aria-controls="view-prof">Platform profiles</button>
+    <button role="tab" id="tab-check" aria-selected="false" aria-controls="view-check">Evaluation checklist</button>
+  </nav>
+
+  <section id="view-rank" role="tabpanel" aria-labelledby="tab-rank">
+    <div class="rank-grid">
+      <div class="panel controls">
+        <div>
+          <div class="eyebrow" style="margin-bottom:8px">Start from a profile</div>
+          <div class="presets" id="presets"></div>
+        </div>
+        <div>
+          <div class="eyebrow" style="margin-bottom:10px">How much each criterion matters (0–5)</div>
+          <div class="weights" id="weights"></div>
+        </div>
+        <div>
+          <div class="eyebrow" style="margin-bottom:10px">Must-haves</div>
+          <div class="musts" id="musts"></div>
+        </div>
+      </div>
+      <div class="panel ranking">
+        <div class="rank-head">
+          <h2 id="rank-title">Ranking for a course or classroom</h2>
+          <span class="eyebrow">weighted score / 100</span>
+        </div>
+        <div id="rows"></div>
+        <div class="seglegend" id="seglegend"></div>
+        <div class="detail" id="detail"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-matrix" role="tabpanel" aria-labelledby="tab-matrix" hidden>
+    <div class="groups" id="groups"></div>
+    <div class="panel mbox"><table id="matrix"></table></div>
+    <p class="note" style="margin-top:14px">"Not confirmed" means the sources reviewed did not confirm the feature. It may still exist; check the vendor's documentation.</p>
+  </section>
+
+  <section id="view-prof" role="tabpanel" aria-labelledby="tab-prof" hidden>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section id="view-check" role="tabpanel" aria-labelledby="tab-check" hidden>
+    <p class="lede" style="margin-bottom:18px">Use these questions when you trial a platform. Each one maps to a slider on the ranking tab, and most map to something the LexAgent notebook already does.</p>
+    <div class="check" id="check"></div>
+  </section>
+
+  <footer>
+    <p>Sources. Prices, free tiers and features come from these pages; ratings are this page's own assessment.</p>
+    <ul>
+      <li><a href="https://www.marktechpost.com/2026/08/09/top-llm-observability-and-evaluation-platforms-in-2026-langfuse-langsmith-braintrust-arize-and-more-compared/">MarkTechPost: top LLM observability platforms in 2026</a></li>
+      <li><a href="https://www.morphllm.com/llm-observability-tools">Morph: LLM observability tools, free tier limits (June 2026)</a></li>
+      <li><a href="https://langfuse.com/blog/joining-clickhouse">Langfuse: joining ClickHouse</a></li>
+      <li><a href="https://www.orrick.com/en/news/2026/01/open-source-llm-observability-langfuse-acquired-by-clickhouse-inc">Orrick: Langfuse acquired by ClickHouse</a></li>
+      <li><a href="https://pypi.org/project/opik/2.2.44/">Opik on PyPI</a></li>
+      <li><a href="https://www.arize.com/docs/phoenix/resources/frequently-asked-questions/what-is-the-difference-between-phoenix-and-arize.md">Arize: Phoenix vs Arize</a></li>
+      <li><a href="https://mlflow.org/articles/top-llm-observability-tools-in-2026-a-pro-guide/">MLflow: top LLM observability tools in 2026</a></li>
+    </ul>
+  </footer>
+</div>
+
+<script>
+const CRIT = [
+ {k:"data", n:"Data control", d:"Self-hosting, license, where data lives", c:"--srv"},
+ {k:"instr",n:"Instrumentation fit", d:"OpenTelemetry, frameworks, cross-process spans", c:"--nb"},
+ {k:"agent",n:"Agent depth", d:"Span-level reasoning and tool calls", c:"#7a5cc4"},
+ {k:"eval", n:"Evaluation loop", d:"Datasets, judges, online evals, CI gates", c:"--trace"},
+ {k:"cost", n:"Cost", d:"Free tier, self-host cost, pricing model", c:"--ok"},
+ {k:"ops",  n:"Operations", d:"Cost tracking, dashboards, alerts, gateway", c:"#c0507a"},
+ {k:"ease", n:"Ease of setup", d:"Time to first trace for a new team", c:"--muted"}
+];
+const MUSTS = [
+ {k:"selfhost", n:"Free self-hosting"},
+ {k:"osi", n:"OSI open-source license"},
+ {k:"otel", n:"OpenTelemetry support confirmed"},
+ {k:"ci", n:"CI regression gating confirmed"}
+];
+const PRESETS = {
+ "Course or classroom": {data:5,instr:4,agent:3,eval:4,cost:5,ops:1,ease:4},
+ "Startup": {data:2,instr:3,agent:4,eval:4,cost:4,ops:3,ease:5},
+ "Regulated enterprise": {data:5,instr:4,agent:3,eval:5,cost:1,ops:4,ease:2},
+ "LangChain team": {data:1,instr:5,agent:5,eval:4,cost:2,ops:3,ease:5},
+ "Equal weights": {data:3,instr:3,agent:3,eval:3,cost:3,ops:3,ease:3}
+};
+const Y=true,N=false,U=null;
+const P = [
+ {id:"langsmith",n:"LangSmith",o:"LangChain",s:{data:1,instr:3,agent:3,eval:3,cost:1,ops:3,ease:3},m:{selfhost:N,osi:N,otel:Y,ci:Y},
+  one:"Default backend for LangChain and LangGraph; what the LexAgent notebook uses.",
+  f:{license:"Closed source",selfhost:"Enterprise plan only (your VPC)",free:"5k traces/mo, 1 seat",paid:"$39/seat/mo",
+     otel:"Yes",agent:"Strong: trace clustering, failure grouping",frameworks:"Best for LangChain/LangGraph; Python, TS, Go, Java SDKs",
+     datasets:"Strong",judge:"Yes, calibrated to human preference",online:"Yes",human:"Annotation queues",ci:"Side-by-side comparisons gate regressions",
+     costtrack:"Unified view across LLM, tools, retrieval, APIs",prompts:"Prompt Hub",extras:"Agent deployment runtime",
+     fit:"Teams already on LangChain/LangGraph who want zero setup"},
+  pro:["Deepest LangChain/LangGraph integration","Online evals and annotation queues"],con:["Closed source","Self-hosting needs an Enterprise license"]},
+ {id:"langfuse",n:"Langfuse",o:"ClickHouse (acquired Jan 2026)",s:{data:3,instr:3,agent:3,eval:3,cost:3,ops:2,ease:2},m:{selfhost:Y,osi:Y,otel:Y,ci:Y},
+  one:"The most widely self-hosted open-source option.",
+  f:{license:"MIT core; enterprise folders separate",selfhost:"Free: Docker Compose, Helm, Terraform",free:"50k units/mo, 2 users, 30-day access",paid:"$29/mo",
+     otel:"Yes",agent:"Strong: nested traces, session replay",frameworks:"Framework-agnostic: OTel, LangChain, OpenAI SDK, LiteLLM",
+     datasets:"Strong: versioned datasets",judge:"Yes, with templates",online:"Production monitoring",human:"Annotation queues",ci:"GitHub Actions regression tests",
+     costtrack:"By model, user, session",prompts:"Yes, with playground",extras:"Strong data-residency control",
+     fit:"Open source, self-hosting, data residency"},
+  pro:["Free self-hosting with an MIT core","Prompt management and evals included"],con:["You run the infrastructure when self-hosting","Ownership changed in 2026; licensing said to be unchanged"]},
+ {id:"phoenix",n:"Arize Phoenix",o:"Arize (AX is commercial)",s:{data:2,instr:3,agent:2,eval:3,cost:3,ops:2,ease:2},m:{selfhost:Y,osi:N,otel:Y,ci:U},
+  one:"Free, OpenTelemetry-native tracing that runs on your laptop.",
+  f:{license:"Elastic License 2.0 (source-available, not OSI)",selfhost:"Free: pip, Docker, Helm",free:"No caps when self-hosted",paid:"Arize AX is commercial",
+     otel:"Native (OpenInference conventions)",agent:"Good",frameworks:"40+ integrations; strong LlamaIndex, OpenAI Agents SDK",
+     datasets:"Strong: datasets and experiments",judge:"Yes, many templates",online:"Drift detection (AX)",human:"Not confirmed",ci:"Not confirmed",
+     costtrack:"Yes",prompts:"Prompt playground",extras:"Embedding clustering; classic ML too",
+     fit:"Free local tracing; the route in the local-tracing guide"},
+  pro:["Runs locally for free","OpenTelemetry-native, so instrumentation is portable"],con:["Elastic License is not OSI open source","Online monitoring lives in paid AX"]},
+ {id:"braintrust",n:"Braintrust",o:"Braintrust",s:{data:1,instr:2,agent:3,eval:3,cost:1,ops:2,ease:2},m:{selfhost:N,osi:N,otel:U,ci:Y},
+  one:"Evaluation-first platform with CI quality gates.",
+  f:{license:"Closed source",selfhost:"Enterprise only (on-prem or hybrid)",free:"$10 credits, 1 GB, 14-day retention",paid:"$249/mo",
+     otel:"Not confirmed",agent:"Strong: custom trace database",frameworks:"Framework-agnostic SDKs",
+     datasets:"Strongest: versioned datasets, experiments",judge:"Yes, plus an AI scorer generator",online:"Yes",human:"Human scoring",ci:"Blocks regressions before deploy",
+     costtrack:"Yes",prompts:"Playground tested on production data",extras:"Agent that drafts prompts and scorers",
+     fit:"Teams that want evals to block bad releases"},
+  pro:["Strongest experiment and CI gating workflow","Unlimited users on free tier"],con:["Highest paid entry price","Closed source"]},
+ {id:"weave",n:"W&B Weave",o:"Weights & Biases",s:{data:1,instr:2,agent:2,eval:2,cost:2,ops:2,ease:2},m:{selfhost:N,osi:N,otel:U,ci:U},
+  one:"LLM tracing beside W&B experiment tracking.",
+  f:{license:"Apache 2.0 SDK; commercial platform",selfhost:"Enterprise",free:"1 GB/mo ingestion",paid:"$60/mo (1.5 GB)",
+     otel:"Not confirmed",agent:"Good: parent-child multi-agent traces",frameworks:"Python-centric",
+     datasets:"Good",judge:"Yes",online:"Not confirmed",human:"Not confirmed",ci:"Not confirmed",
+     costtrack:"Per agent",prompts:"Not confirmed",extras:"Lineage to W&B experiments",
+     fit:"Teams already using W&B"},
+  pro:["Ties LLM traces to model training history"],con:["Ingestion priced per MB above the plan","LLM layer is newer than W&B's core"]},
+ {id:"opik",n:"Opik",o:"Comet",s:{data:3,instr:3,agent:2,eval:2,cost:3,ops:2,ease:2},m:{selfhost:Y,osi:Y,otel:Y,ci:Y},
+  one:"Open-source tracing and evals with built-in guardrails.",
+  f:{license:"Apache 2.0",selfhost:"Free: Docker Compose, Helm",free:"Cloud tier available",paid:"See vendor",
+     otel:"First-party",agent:"Good: @track decorator for nested calls",frameworks:"Dozens incl. LangChain, LlamaIndex, CrewAI",
+     datasets:"Good",judge:"Hallucination, moderation, RAG metrics",online:"Not confirmed",human:"Feedback scores on traces",ci:"PyTest integration",
+     costtrack:"Yes",prompts:"Yes, with playground",extras:"Built-in guardrails",
+     fit:"Open source with guardrails included"},
+  pro:["Apache 2.0 including the backend","Guardrails in the same tool"],con:["Smaller ecosystem than Langfuse"]},
+ {id:"mlflow",n:"MLflow Tracing",o:"Linux Foundation / Databricks",s:{data:3,instr:2,agent:2,eval:2,cost:3,ops:2,ease:1},m:{selfhost:Y,osi:Y,otel:Y,ci:Y},
+  one:"Open-source tracing inside the MLflow platform.",
+  f:{license:"Apache 2.0",selfhost:"Free",free:"Fully open source",paid:"Managed via Databricks",
+     otel:"Exports OTel GenAI conventions",agent:"Good: native agent tracing",frameworks:"Broad; integrates RAGAS, DeepEval, TruLens",
+     datasets:"Good: MLflow experiments",judge:"Yes, multi-turn",online:"Not confirmed",human:"Judge alignment with human feedback",ci:"Via MLflow experiments",
+     costtrack:"Via AI gateway",prompts:"Yes, with automatic optimization",extras:"Gateway: routing, rate limits, fallbacks",
+     fit:"Teams already on MLflow or Databricks"},
+  pro:["No enterprise paywall","Prompt optimization from eval results"],con:["Slower start for teams new to MLflow"]},
+ {id:"helicone",n:"Helicone",o:"Helicone",s:{data:3,instr:1,agent:1,eval:1,cost:3,ops:3,ease:3},m:{selfhost:Y,osi:Y,otel:Y,ci:N},
+  one:"Proxy and gateway: cost, caching and routing with one line.",
+  f:{license:"Apache 2.0",selfhost:"Free: five-service Compose stack",free:"10k requests/mo, 7-day retention",paid:"$79/mo",
+     otel:"OpenLLMetry logging",agent:"Limited: request-level, not span-level",frameworks:"100+ models via base-URL swap",
+     datasets:"Light",judge:"Light",online:"Not a focus",human:"Not confirmed",ci:"No",
+     costtrack:"Strongest for multi-provider cost",prompts:"Prompt experiments",extras:"Response caching, routing, alerts",
+     fit:"Fast multi-provider cost visibility; often paired with another tool"},
+  pro:["One-line setup","Caching and routing reduce spend"],con:["Not built for deep agent traces or eval loops"]},
+ {id:"datadog",n:"Datadog LLM Obs",o:"Datadog",s:{data:0,instr:3,agent:2,eval:1,cost:0,ops:3,ease:2},m:{selfhost:N,osi:N,otel:Y,ci:U},
+  one:"LLM traces next to your APM, logs and security data.",
+  f:{license:"Proprietary",selfhost:"No (SaaS)",free:"Not published",paid:"Contact sales",
+     otel:"Native GenAI conventions v1.37+",agent:"Moderate: agent monitoring added recently",frameworks:"1,000+ infrastructure integrations",
+     datasets:"Moderate, added recently",judge:"Not confirmed",online:"Not confirmed",human:"Not confirmed",ci:"Not confirmed",
+     costtrack:"Per request",prompts:"Not confirmed",extras:"Prompt-injection security signals; incident workflows",
+     fit:"Organisations already running Datadog"},
+  pro:["LLM issues in the same place as infra alerts"],con:["Evals less mature; teams often add an eval tool","No public pricing"]}
+];
+const GROUPS = {
+ "Openness and cost":[["license","License"],["selfhost","Self-hosting"],["free","Free tier"],["paid","Paid from"]],
+ "Tracing":[["otel","OpenTelemetry"],["agent","Agent depth"],["frameworks","Frameworks"]],
+ "Evaluation":[["datasets","Datasets and experiments"],["judge","LLM-as-judge"],["online","Online evals"],["human","Human annotation"],["ci","CI gating"]],
+ "Operations":[["costtrack","Cost tracking"],["prompts","Prompt management"],["extras","Extras"]],
+ "Scores":"scores",
+ "Best fit":[["fit","Best for"]]
+};
+const CHECK = [
+ ["data","Can we keep trace data where we need it?","Check the license (OSI or source-available), whether self-hosting is free or Enterprise-only, and the data region of the cloud tier.","Your notebook sends prompts and legal text; that is the data at stake."],
+ ["instr","Does it fit how we instrument?","Look for OpenTelemetry support so you can switch vendors, and a way to nest spans across processes.","LexAgent's MCP server needs trace context passed in headers."],
+ ["agent","Can we see each reasoning step?","Span-level tool calls and inputs matter more than request-level logs for agents.","You should be able to find the Thought before each tool call."],
+ ["eval","Does it close the evaluation loop?","Datasets, LLM-as-judge, online evals on live traffic, human annotation, and gates in CI.","Section 14's task checks and judge would move here."],
+ ["custom","Can we filter on our own fields?","Custom metadata like outcome and route should be filterable and chartable, not buried in JSON.","This was the point of every run.metadata line in the notebook."],
+ ["cost","What will it cost at our volume?","Find the billing unit (traces, units, requests, GB, scores) and estimate monthly volume including retention.","Five demo runs are free anywhere; a class of 40 running evaluations may not be."],
+ ["ops","Will it alert us?","Dashboards, alerts, cost per query, and links to existing monitoring.","Rising malformed_react or step_cap_reached rates should page someone."],
+ ["ease","How fast is the first trace?","Time a teammate from signup to first nested trace, and count supported SDK languages.","For students, setup time is learning time lost."]
+];
+
+let W = {...PRESETS["Course or classroom"]}, M = {}, preset="Course or classroom", sel=null;
+const tokenColor=c=>c.startsWith("--")?`var(${c})`:c;
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+const presetsEl=document.getElementById("presets");
+Object.keys(PRESETS).forEach(name=>{const b=document.createElement("button");b.className="chip";b.textContent=name;
+  b.setAttribute("aria-pressed",name===preset);b.onclick=()=>{preset=name;W={...PRESETS[name]};syncSliders();update()};presetsEl.appendChild(b)});
+const wEl=document.getElementById("weights");
+CRIT.forEach(c=>{const d=document.createElement("div");d.className="w";
+  d.innerHTML=`<label for="w-${c.k}"><span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${tokenColor(c.c)};margin-right:6px"></i>${c.n}</span><span id="wv-${c.k}"></span></label>
+   <input type="range" id="w-${c.k}" min="0" max="5" step="1"><small>${c.d}</small>`;
+  wEl.appendChild(d);
+  d.querySelector("input").addEventListener("input",e=>{W[c.k]=+e.target.value;preset=null;update()});
+});
+const mEl=document.getElementById("musts");
+MUSTS.forEach(m=>{const l=document.createElement("label");l.setAttribute("for","m-"+m.k);
+  l.innerHTML=`<input type="checkbox" id="m-${m.k}"><span>${m.n}</span>`;mEl.appendChild(l);
+  l.querySelector("input").addEventListener("change",e=>{M[m.k]=e.target.checked;update()})});
+document.getElementById("seglegend").innerHTML=CRIT.map(c=>`<span><i style="background:${tokenColor(c.c)}"></i>${c.n}</span>`).join("");
+
+function syncSliders(){CRIT.forEach(c=>{document.getElementById("w-"+c.k).value=W[c.k]})}
+function score(p){const tot=CRIT.reduce((a,c)=>a+W[c.k]*3,0)||1;
+  const parts=CRIT.map(c=>({c,v:W[c.k]*p.s[c.k]/tot*100}));return {parts,total:parts.reduce((a,x)=>a+x.v,0)}}
+function fails(p){return MUSTS.filter(m=>M[m.k]&&p.m[m.k]!==true).map(m=>m.n+(p.m[m.k]===null?" (not confirmed)":""))}
+function update(){
+  CRIT.forEach(c=>document.getElementById("wv-"+c.k).textContent=W[c.k]);
+  presetsEl.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed",b.textContent===preset));
+  document.getElementById("rank-title").textContent=preset?`Ranking for: ${preset.toLowerCase()}`:"Ranking for your custom weights";
+  const list=P.map(p=>({p,...score(p),f:fails(p)})).sort((a,b)=>(a.f.length?1:0)-(b.f.length?1:0)||b.total-a.total);
+  document.getElementById("rows").innerHTML=list.map((r,i)=>`
+   <div class="row${r.f.length?" out":""}" tabindex="0" role="button" data-id="${r.p.id}" aria-label="${esc(r.p.n)}, score ${Math.round(r.total)}">
+     <span class="pos">${r.f.length?"–":i+1}</span>
+     <span class="nm">${esc(r.p.n)}<small>${esc(r.p.o)}</small></span>
+     <span class="track">${r.parts.map(x=>`<span class="seg" title="${x.c.n}: ${x.v.toFixed(1)}" style="width:${x.v}%;background:${tokenColor(x.c.c)}"></span>`).join("")}</span>
+     <span class="sc">${Math.round(r.total)}</span>
+     ${r.f.length?`<span class="why">Missing: ${esc(r.f.join(", "))}</span>`:""}
+   </div>`).join("");
+  document.querySelectorAll(".row").forEach(row=>{const go=()=>{sel=row.dataset.id;showDetail()};row.onclick=go;row.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go()}}});
+  if(!sel||list.find(r=>r.p.id===sel&&r.f.length))sel=(list.find(r=>!r.f.length)||list[0]).p.id;
+  showDetail();
+  try{localStorage.setItem("obs-w",JSON.stringify({W,M,preset}))}catch(e){}
+}
+function lvl(v){return `<span class="lvl l${v}">${["none","limited","good","strong"][v]}</span>`}
+function showDetail(){
+  const p=P.find(x=>x.id===sel);
+  document.getElementById("detail").innerHTML=`
+   <div class="eyebrow">Selected</div><h3 style="font-size:20px">${esc(p.n)}</h3><p class="muted">${esc(p.one)}</p>
+   <dl class="kv">
+    <dt>License</dt><dd>${esc(p.f.license)}</dd>
+    <dt>Self-hosting</dt><dd>${esc(p.f.selfhost)}</dd>
+    <dt>Free tier · paid</dt><dd>${esc(p.f.free)} · ${esc(p.f.paid)}</dd>
+    <dt>Best for</dt><dd>${esc(p.f.fit)}</dd>
+    <dt>Scores</dt><dd>${CRIT.map(c=>`${c.n} ${lvl(p.s[c.k])}`).join(" ")}</dd>
+   </dl>`;
+}
+
+/* matrix */
+let group="Openness and cost";
+const gEl=document.getElementById("groups");
+Object.keys(GROUPS).forEach(g=>{const b=document.createElement("button");b.className="chip";b.textContent=g;
+  b.onclick=()=>{group=g;renderMatrix()};gEl.appendChild(b)});
+function cell(v){if(v==="No"||v.startsWith("No "))return `<span class="v-no">${esc(v)}</span>`;
+  if(v==="Not confirmed")return `<span class="v-nc">${esc(v)}</span>`;
+  if(v==="Yes"||v.startsWith("Yes")||v.startsWith("Free")||v.startsWith("Native")||v.startsWith("Strong"))return `<span class="v-yes">${esc(v)}</span>`;
+  return esc(v)}
+function renderMatrix(){
+  gEl.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed",b.textContent===group));
+  const head=`<thead><tr><th scope="col" style="position:sticky;left:0;z-index:2">${esc(group)}</th>${P.map(p=>`<th scope="col">${esc(p.n)}</th>`).join("")}</tr></thead>`;
+  let body;
+  if(GROUPS[group]==="scores")body=CRIT.map(c=>`<tr><th scope="row">${c.n}</th>${P.map(p=>`<td>${lvl(p.s[c.k])}</td>`).join("")}</tr>`).join("");
+  else body=GROUPS[group].map(([k,n])=>`<tr><th scope="row">${n}</th>${P.map(p=>`<td>${cell(p.f[k])}</td>`).join("")}</tr>`).join("");
+  document.getElementById("matrix").innerHTML=head+"<tbody>"+body+"</tbody>";
+}
+
+/* profiles */
+document.getElementById("cards").innerHTML=P.map(p=>`<article class="panel card">
+  <div><div class="eyebrow">${esc(p.o)}</div><h3 style="font-size:20px;margin-top:2px">${esc(p.n)}</h3></div>
+  <p>${esc(p.one)}</p>
+  <div class="tags">${MUSTS.map(m=>`<span class="tag ${p.m[m.k]===true?"g":p.m[m.k]===false?"r":""}">${p.m[m.k]===true?"✓":p.m[m.k]===false?"✕":"?"} ${m.n.replace(" confirmed","")}</span>`).join("")}</div>
+  <div><div class="eyebrow" style="margin-bottom:4px">Strengths</div><ul class="tight">${p.pro.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+  <div><div class="eyebrow" style="margin-bottom:4px">Watch out for</div><ul class="tight">${p.con.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+  <p class="muted" style="font-size:14px">${esc(p.f.free)} free · ${esc(p.f.paid)}</p>
+ </article>`).join("");
+
+/* checklist */
+document.getElementById("check").innerHTML=CHECK.map(c=>`<article class="panel crit">
+  <span class="q">${esc((CRIT.find(x=>x.k===c[0])||{n:"Custom metadata"}).n)}</span><h3>${esc(c[1])}</h3><p>${esc(c[2])}</p>
+  <p class="muted" style="font-size:14px">In LexAgent: ${esc(c[3])}</p></article>`).join("");
+
+/* tabs */
+const tabs=[...document.querySelectorAll('[role="tab"]')];
+function selectTab(t){tabs.forEach(x=>{const on=x===t;x.setAttribute("aria-selected",on);document.getElementById(x.getAttribute("aria-controls")).hidden=!on})}
+tabs.forEach(t=>t.onclick=()=>selectTab(t));
+const hm={rank:"tab-rank",compare:"tab-matrix",profiles:"tab-prof",checklist:"tab-check"};
+if(hm[location.hash.slice(1)])selectTab(document.getElementById(hm[location.hash.slice(1)]));
+
+try{const s=JSON.parse(localStorage.getItem("obs-w")||"null");if(s){W={...W,...s.W};M=s.M||{};preset=s.preset;
+  MUSTS.forEach(m=>{document.getElementById("m-"+m.k).checked=!!M[m.k]})}}catch(e){}
+syncSliders();update();renderMatrix();
+</script>
